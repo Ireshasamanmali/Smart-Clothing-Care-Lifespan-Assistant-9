@@ -1,0 +1,3655 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="tool">
+  <meta name="design-style" content="haven">
+  <title>LankaWeave Care — Smart Clothing Care &amp; Lifespan Assistant</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* Page and surfaces (white, soft beige, light blue & sage mist) */
+      --background: #f6f3ec;
+      --surface-container-low: #ffffff;
+      --surface-container: #e2ece3;
+      --surface-container-warm: #efe9dc;
+      --surface-container-high: #dce5df;
+
+      /* Ink (dark navy & muted slate) */
+      --on-surface: #152238;
+      --on-surface-variant: #445368;
+
+      /* Rules */
+      --outline: #bcc6ce;
+      --outline-variant: #dde2e0;
+
+      /* Accents (dark navy, light blue, nature-inspired sage green) */
+      --primary: #162b49;
+      --primary-hover: #213c63;
+      --on-primary: #ffffff;
+      --primary-container: #dde9f2;
+      --on-primary-container: #162b49;
+      --secondary: #3f6147;
+      --tertiary: #5d8266;
+      --sky-accent: #5282a6;
+      --error: #a63d32;
+      --error-bg: #f9ecea;
+      --on-error: #ffffff;
+
+      /* Semantic */
+      --positive: #3f6147;
+      --positive-bg: #e2ece3;
+      --warning: #8f5c24;
+      --warning-bg: #f6ecdc;
+      --focus: #162b49;
+
+      /* Data series */
+      --data-1: #162b49;
+      --data-2: #3f6147;
+      --data-3: #5282a6;
+      --data-4: #8f5c24;
+      --data-context: #c2cbc7;
+
+      /* Fonts */
+      --font-headline: 'Outfit', sans-serif;
+      --font-body: 'Hanken Grotesk', sans-serif;
+      --font-label: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Type scale (tool / dashboard) */
+      --display-size: clamp(2rem, 1.45rem + 2.2vw, 3rem);
+      --headline-size: clamp(1.375rem, 1.15rem + 0.8vw, 1.875rem);
+      --subhead-size: clamp(1.0625rem, 1rem + 0.25vw, 1.25rem);
+      --body-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+      --label-size: 0.78rem;
+
+      /* Spacing scale (4pt base) */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 3.75rem;
+      --space-3xl: 5rem;
+
+      /* Shape & effects */
+      --rounded: 0.5rem;
+      --rounded-lg: 0.875rem;
+      --rounded-full: 9999px;
+      --hairline: 1px solid var(--outline-variant);
+      --hairline-control: 1px solid var(--outline);
+      --elevation: 0 2px 12px color-mix(in srgb, var(--primary) 5%, transparent);
+      --elevation-hover: 0 8px 24px color-mix(in srgb, var(--primary) 9%, transparent);
+      --gradient-soft: linear-gradient(135deg, var(--surface-container-low) 0%, var(--primary-container) 100%);
+      --gradient-sage: linear-gradient(135deg, var(--surface-container-low) 0%, var(--surface-container) 100%);
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      overflow-x: clip;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    header { position: static !important; }
+
+    .page-shell {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 var(--space-lg) var(--space-3xl);
+    }
+    .page-shell * { min-width: 0; }
+
+    /* Focus rings */
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* Header & Top Navigation */
+    .site-header {
+      background: var(--surface-container-low);
+      border-bottom: var(--hairline);
+      padding: var(--space-md) var(--space-lg);
+    }
+    .header-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      text-decoration: none;
+      color: var(--primary);
+    }
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--rounded);
+      background: var(--primary);
+      color: var(--on-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+    .brand-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.05rem;
+      letter-spacing: -0.015em;
+    }
+    .brand-sub {
+      font-family: var(--font-label);
+      font-size: 0.72rem;
+      color: var(--secondary);
+      font-weight: 500;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 var(--space-sm);
+      font-family: var(--font-label);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--on-surface-variant);
+      text-decoration: none;
+      border-radius: var(--rounded);
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+    .nav-link:hover {
+      background-color: var(--primary-container);
+      color: var(--primary);
+    }
+    .nav-link.is-active {
+      color: var(--primary);
+      background-color: var(--primary-container);
+      font-weight: 600;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .pill-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--rounded-full);
+      background: var(--surface-container);
+      color: var(--secondary);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+    }
+
+    /* Typography helpers */
+    .headline {
+      font-family: var(--font-headline);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      color: var(--on-surface);
+      margin: 0;
+    }
+    .headline strong { font-weight: 600; color: var(--primary); }
+    .section-title {
+      font-size: var(--headline-size);
+    }
+    .subhead {
+      font-family: var(--font-headline);
+      font-weight: 500;
+      font-size: var(--subhead-size);
+      letter-spacing: -0.01em;
+      margin: 0;
+      color: var(--on-surface);
+    }
+    .label-text {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+      color: var(--on-surface-variant);
+      letter-spacing: 0.015em;
+    }
+    .mono-figure {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .caption-sage {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: var(--secondary);
+      margin: var(--space-xs) 0 0;
+    }
+    .lede {
+      font-size: 1.0625rem;
+      color: var(--on-surface-variant);
+      max-width: 64ch;
+      margin: var(--space-sm) 0 0;
+    }
+
+    /* Sections */
+    .app-section {
+      padding-top: var(--space-2xl);
+      margin-top: var(--space-2xl);
+      border-top: var(--hairline);
+    }
+    .app-section.no-border {
+      border-top: none;
+      margin-top: 0;
+      padding-top: var(--space-xl);
+    }
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    /* Panels & Cards */
+    .panel {
+      background: var(--surface-container-low);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      box-shadow: var(--elevation);
+    }
+    .panel-soft {
+      background: var(--surface-container-warm);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+    }
+    .panel-sky {
+      background: var(--gradient-soft);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+    }
+    .panel-sage {
+      background: var(--gradient-sage);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 var(--space-lg);
+      border-radius: var(--rounded);
+      font-family: var(--font-label);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-decoration: none;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-secondary {
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      border: var(--hairline-control);
+    }
+    .btn-secondary:hover:not(:disabled) { background: var(--primary-container); }
+    .btn-sage {
+      background: var(--secondary);
+      color: var(--on-primary);
+    }
+    .btn-sage:hover:not(:disabled) { background: var(--tertiary); }
+    .btn-sm {
+      min-height: 44px;
+      padding: 0 var(--space-md);
+      font-size: 0.85rem;
+    }
+
+    /* Tags */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--rounded-full);
+      background: var(--surface-container);
+      color: var(--secondary);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+    }
+    .tag-sky {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+    .tag-warn {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+    .tag-error {
+      background: var(--error-bg);
+      color: var(--error);
+    }
+
+    /* Forms & Inputs (always-visible labels above inputs) */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-label {
+      font-family: var(--font-label);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--on-surface);
+    }
+    .input-control, .select-control, .textarea-control {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px;
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      border: var(--hairline-control);
+      border-radius: var(--rounded);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      transition: box-shadow var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
+    }
+    .select-control { padding-right: 36px; }
+    .textarea-control { min-height: 110px; resize: vertical; }
+    .input-control:focus, .select-control:focus, .textarea-control:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
+      gap: var(--space-md);
+      align-items: end;
+    }
+
+    /* Hero layout */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: var(--space-xl);
+      align-items: center;
+    }
+    .hero-title {
+      font-size: var(--display-size);
+      margin-top: var(--space-sm);
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+    }
+    .hero-kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-xl);
+    }
+    .kpi-tile {
+      background: var(--surface-container-low);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+    }
+    .kpi-value {
+      font-family: var(--font-headline);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+      margin-top: 2px;
+    }
+
+    /* Photo & Canvas Studio Frames */
+    .studio-frame {
+      position: relative;
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+      border: var(--hairline);
+      background: var(--surface-container-warm);
+    }
+    .studio-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .studio-caption {
+      padding: 10px 14px;
+      background: var(--surface-container-low);
+      border-top: var(--hairline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      font-size: 0.82rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Dashboard quick bar */
+    .dashboard-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+
+    /* Analyzer Split Workspace */
+    .analyzer-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      gap: var(--space-xl);
+      align-items: start;
+    }
+
+    /* Preset Selector Grids */
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
+      gap: var(--space-sm);
+    }
+    .choice-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 10px 12px;
+      min-height: 44px;
+      background: var(--surface-container-low);
+      border: var(--hairline-control);
+      border-radius: var(--rounded);
+      cursor: pointer;
+      text-align: left;
+      font-family: var(--font-body);
+      color: var(--on-surface);
+      transition: background-color var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
+    }
+    .choice-card:hover { background: var(--primary-container); }
+    .choice-card.is-selected {
+      background: var(--primary-container);
+      box-shadow: inset 0 0 0 2px var(--primary);
+      font-weight: 600;
+    }
+
+    /* Fabric Swatch Gallery */
+    .fabric-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-sm);
+    }
+    .fabric-tile {
+      padding: 0;
+      border: var(--hairline-control);
+      border-radius: var(--rounded);
+      overflow: hidden;
+      background: var(--surface-container-low);
+      cursor: pointer;
+      text-align: left;
+      transition: transform var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
+    }
+    .fabric-tile:hover { transform: translateY(-2px); box-shadow: var(--elevation-hover); }
+    .fabric-tile.is-selected { box-shadow: 0 0 0 2px var(--primary); }
+    .fabric-tile canvas { display: block; width: 100%; height: 68px; object-fit: cover; }
+    .fabric-tile-label {
+      padding: 6px 8px;
+      font-family: var(--font-label);
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--on-surface);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Garment Visual Gallery */
+    .garment-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--space-sm);
+    }
+    .garment-card {
+      padding: 8px;
+      border-radius: var(--rounded);
+      border: var(--hairline-control);
+      background: var(--surface-container-low);
+      cursor: pointer;
+      text-align: center;
+      font-family: var(--font-label);
+      font-size: 0.78rem;
+      color: var(--on-surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .garment-card:hover { background: var(--primary-container); }
+    .garment-card.is-selected {
+      background: var(--primary-container);
+      box-shadow: inset 0 0 0 2px var(--primary);
+      font-weight: 600;
+    }
+    .garment-card canvas { width: 100%; height: 56px; border-radius: 4px; }
+
+    /* Color Swatches */
+    .swatch-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .color-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px;
+      padding: 0 12px;
+      border-radius: var(--rounded);
+      border: var(--hairline-control);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      font-family: var(--font-label);
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .color-btn.is-selected {
+      background: var(--primary-container);
+      box-shadow: inset 0 0 0 2px var(--primary);
+      font-weight: 600;
+    }
+    .swatch-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: var(--rounded-full);
+      border: 1px solid var(--outline);
+      flex-shrink: 0;
+    }
+    .dot-white { background: var(--surface-container-low); }
+    .dot-pastel { background: var(--primary-container); }
+    .dot-navy { background: var(--primary); }
+    .dot-sage { background: var(--secondary); }
+    .dot-ochre { background: var(--warning); }
+    .dot-crimson { background: var(--error); }
+
+    /* Care Recommendation Cards */
+    .care-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+    .care-card {
+      background: var(--surface-container-low);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .care-card-visual {
+      width: 100%;
+      height: 118px;
+      display: block;
+      border-bottom: var(--hairline);
+    }
+    .care-card-body {
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* ISO 3758 Strip */
+    .iso-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-sm);
+      background: var(--surface-container-warm);
+      border: var(--hairline);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+    }
+    .iso-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 4px;
+    }
+    .iso-cell svg {
+      width: 38px;
+      height: 38px;
+      color: var(--primary);
+    }
+    .iso-cell-label {
+      font-family: var(--font-label);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--on-surface);
+    }
+    .iso-cell-sub {
+      font-size: 0.72rem;
+      color: var(--on-surface-variant);
+      line-height: 1.25;
+    }
+
+    /* Weather Guidance Grid */
+    .weather-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: var(--space-xl);
+      align-items: start;
+    }
+    .weather-scenario-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-sm);
+    }
+    .risk-meter {
+      height: 10px;
+      border-radius: var(--rounded-full);
+      background: var(--surface-container-high);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .risk-fill {
+      height: 100%;
+      border-radius: var(--rounded-full);
+      background: var(--secondary);
+      transition: width var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
+    }
+
+    /* Damage & Repair Split */
+    .damage-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: var(--space-xl);
+      align-items: start;
+    }
+    .repair-steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+    }
+    .repair-step-item {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: var(--space-sm);
+      align-items: start;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--surface-container-low);
+      border: var(--hairline);
+      border-radius: var(--rounded);
+    }
+    .step-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--rounded-full);
+      background: var(--primary-container);
+      color: var(--primary);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: var(--space-lg);
+    }
+    .tab-btn {
+      min-height: 44px;
+      padding: 0 var(--space-md);
+      border-radius: var(--rounded);
+      border: var(--hairline-control);
+      background: var(--surface-container-low);
+      color: var(--on-surface-variant);
+      font-family: var(--font-label);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .tab-btn:hover { background: var(--primary-container); color: var(--primary); }
+    .tab-btn.is-active {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    /* Tables */
+    .data-table-wrap { overflow-x: auto; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 12px 14px;
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      color: var(--on-surface-variant);
+      border-bottom: 2px solid var(--outline);
+    }
+    .data-table td {
+      padding: 12px 14px;
+      border-bottom: var(--hairline);
+      vertical-align: top;
+    }
+    .data-table tr:hover td { background: var(--surface-container-high); }
+
+    /* Adaptive Card Grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+      gap: var(--space-lg);
+    }
+    .card-grid-compact {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+
+    /* Reminders & Saved Plans */
+    .list-stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .reminder-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding: 12px var(--space-md);
+      background: var(--surface-container-low);
+      border: var(--hairline);
+      border-radius: var(--rounded);
+    }
+    .reminder-item.is-done {
+      background: var(--surface-container);
+      opacity: 0.85;
+    }
+    .reminder-item.is-done .reminder-title {
+      text-decoration: line-through;
+    }
+
+    /* Upload preview */
+    .upload-preview-box {
+      display: none;
+      margin-top: var(--space-sm);
+      border: var(--hairline);
+      border-radius: var(--rounded);
+      overflow: hidden;
+      background: var(--surface-container-warm);
+    }
+    .upload-preview-box.is-visible { display: block; }
+    .upload-preview-box img {
+      display: block;
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+    }
+
+    /* Chart Wrapper */
+    .chart-box {
+      position: relative;
+      min-height: 280px;
+      width: 100%;
+    }
+
+    /* Inline status alerts */
+    .inline-banner {
+      padding: 12px 16px;
+      border-radius: var(--rounded);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .inline-banner.is-info { background: var(--primary-container); color: var(--on-primary-container); }
+    .inline-banner.is-sage { background: var(--surface-container); color: var(--secondary); }
+    .inline-banner.is-warn { background: var(--warning-bg); color: var(--warning); }
+    .inline-banner.is-error { background: var(--error-bg); color: var(--error); }
+
+    /* Container query example for cards */
+    .card-wrapper { container-type: inline-size; }
+    @container (min-width: 480px) {
+      .split-inside-card {
+        display: grid;
+        grid-template-columns: 160px minmax(0, 1fr);
+        gap: var(--space-md);
+        align-items: center;
+      }
+    }
+    @container (max-width: 479px) {
+      .split-inside-card {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-sm);
+      }
+    }
+
+    /* Responsive breakpoints */
+    @media (max-width: 960px) {
+      .hero-grid, .analyzer-grid, .weather-grid, .damage-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-kpi-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .garment-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell { padding: 0 var(--space-md) var(--space-2xl); }
+      .site-header { padding: var(--space-sm) var(--space-md); }
+      .hero-kpi-strip, .care-cards-grid, .fabric-gallery, .weather-scenario-tabs {
+        grid-template-columns: 1fr;
+      }
+      .iso-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .garment-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header & Navigation -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#home" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <i data-lucide="shirt" width="22" height="22"></i>
+        </span>
+        <span class="brand-text">
+          <span class="brand-title">LankaWeave Care</span>
+          <span class="brand-sub">Smart Clothing Care &amp; Lifespan Assistant</span>
+        </span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#home" class="nav-link is-active">Home</a>
+        <a href="#analyzer" class="nav-link">Analyser</a>
+        <a href="#weather" class="nav-link">SL Weather</a>
+        <a href="#damage" class="nav-link">Damage &amp; Repair</a>
+        <a href="#reminders" class="nav-link">Reminders</a>
+        <a href="#dashboard" class="nav-link">Dashboard</a>
+        <a href="#knowledge" class="nav-link">Knowledge Hub</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
+
+      <div class="header-meta">
+        <span class="pill-status" id="header-climate-pill">
+          <i data-lucide="cloud-rain" width="15" height="15" aria-hidden="true"></i>
+          <span>Colombo · 82% RH</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <!-- Module 1: Homepage & Hero -->
+    <section id="home" class="app-section no-border">
+      <div class="hero-grid">
+        <div>
+          <span class="tag">
+            <i data-lucide="sparkles" width="14" height="14" aria-hidden="true"></i>
+            Built for Sri Lankan Climates &amp; Everyday Wardrobes
+          </span>
+          <h1 class="headline hero-title">
+            Take Better Care of Your Clothes, <strong>Make Them Last Longer</strong>
+          </h1>
+          <p class="lede">
+            An AI-assisted garment care and wardrobe longevity platform tailored to Sri Lanka’s monsoons, coastal humidity, tropical sunlight, and mineral water conditions. Identify fabric weaves, decode ISO 3758 care symbols, diagnose early fabric damage, and protect every piece from sarees to everyday cottons.
+          </p>
+
+          <div class="hero-actions">
+            <button type="button" class="btn btn-primary" onclick="scrollToSection('analyzer')">
+              <span>Get Started</span>
+              <i data-lucide="arrow-right" width="18" height="18" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="scrollToSection('weather')">
+              <i data-lucide="cloud-sun-rain" width="18" height="18" aria-hidden="true"></i>
+              <span>Check Monsoon Drying Guide</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="scrollToSection('damage')">
+              <i data-lucide="scan-search" width="18" height="18" aria-hidden="true"></i>
+              <span>Diagnose Fabric Damage</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="studio-frame">
+          <canvas id="canvas-hero-wardrobe" class="studio-canvas" width="760" height="480" aria-label="Organised Sri Lankan wardrobe studio display featuring linen shirt, silk saree, navy blazer, and cotton trousers in sunlit timber closet"></canvas>
+          <div class="studio-caption">
+            <span>ResNet-50 Textile Vision · Breathable Wardrobe Layout</span>
+            <span class="tag-sky tag">15 Garment Classes · 92% Accuracy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-kpi-strip">
+        <div class="kpi-tile">
+          <div class="label-text">Garment Lifespan Gain</div>
+          <div class="kpi-value">+40%</div>
+          <p class="caption-sage">Via cold-water &amp; shade-dry routines</p>
+        </div>
+        <div class="kpi-tile">
+          <div class="label-text">Wardrobe Utilisation</div>
+          <div class="kpi-value">+15%</div>
+          <p class="caption-sage">Hybrid AI outfit &amp; wear tracking</p>
+        </div>
+        <div class="kpi-tile">
+          <div class="label-text">Mildew Risk Threshold</div>
+          <div class="kpi-value">&ge;70% RH</div>
+          <p class="caption-sage">Active alerts across 20–30°C tropics</p>
+        </div>
+        <div class="kpi-tile">
+          <div class="label-text">Global Care Standard</div>
+          <div class="kpi-value">ISO 3758</div>
+          <p class="caption-sage">All 5 symbol groups decoded live</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 2 & 3: Clothing Information Analysis & Smart Care Recommendations -->
+    <section id="analyzer" class="app-section">
+      <div class="section-header">
+        <div>
+          <span class="label-text">AI Garment Profiling &amp; Personalised Care Engine</span>
+          <h2 class="headline section-title">Clothing Information <strong>Analyser &amp; Care Plan</strong></h2>
+        </div>
+        <div class="pill-status">
+          <i data-lucide="cpu" width="15" height="15" aria-hidden="true"></i>
+          <span>Vision API: ResNet-50 CNN (92% Precision)</span>
+        </div>
+      </div>
+
+      <div class="analyzer-grid">
+        <!-- Left Input Panel -->
+        <div class="panel">
+          <h3 class="subhead">1. Select or Upload Garment Information</h3>
+          <p class="caption-sage">Choose a quick wardrobe preset, upload a garment photograph, or adjust fibre and colour details below.</p>
+
+          <div class="field-group" style="margin-top: var(--space-md);">
+            <label class="field-label" for="garment-photo-upload">Upload Clothing Photograph (Optional local AI preview)</label>
+            <input type="file" id="garment-photo-upload" class="input-control" accept="image/*" onchange="handleGarmentUpload(this)">
+            <div id="garment-upload-preview" class="upload-preview-box">
+              <img id="garment-upload-img" src="" alt="Uploaded garment preview">
+              <div class="studio-caption">
+                <span id="garment-upload-name">Uploaded garment</span>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="clearGarmentUpload()">Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group" style="margin-top: var(--space-md);">
+            <span class="field-label">Garment Category (Visual Selector)</span>
+            <div class="garment-grid" id="garment-category-grid">
+              <button type="button" class="garment-card is-selected" data-cat="Shirt" onclick="selectCategory('Shirt')">
+                <canvas width="110" height="72" data-garment="Shirt" aria-hidden="true"></canvas>
+                <span>Shirt</span>
+              </button>
+              <button type="button" class="garment-card" data-cat="Trousers" onclick="selectCategory('Trousers')">
+                <canvas width="110" height="72" data-garment="Trousers" aria-hidden="true"></canvas>
+                <span>Trousers</span>
+              </button>
+              <button type="button" class="garment-card" data-cat="Dress" onclick="selectCategory('Dress')">
+                <canvas width="110" height="72" data-garment="Dress" aria-hidden="true"></canvas>
+                <span>Dress</span>
+              </button>
+              <button type="button" class="garment-card" data-cat="Saree" onclick="selectCategory('Saree')">
+                <canvas width="110" height="72" data-garment="Saree" aria-hidden="true"></canvas>
+                <span>Saree</span>
+              </button>
+              <button type="button" class="garment-card" data-cat="T-Shirt" onclick="selectCategory('T-Shirt')">
+                <canvas width="110" height="72" data-garment="T-Shirt" aria-hidden="true"></canvas>
+                <span>T-Shirt</span>
+              </button>
+              <button type="button" class="garment-card" data-cat="Jacket" onclick="selectCategory('Jacket')">
+                <canvas width="110" height="72" data-garment="Jacket" aria-hidden="true"></canvas>
+                <span>Jacket</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group" style="margin-top: var(--space-md);">
+            <span class="field-label">Fabric Type (High-Resolution Macro Weave Close-Ups)</span>
+            <div class="fabric-gallery" id="fabric-gallery-grid">
+              <button type="button" class="fabric-tile is-selected" data-fabric="Cotton" onclick="selectFabric('Cotton')">
+                <canvas width="200" height="110" data-macro="Cotton" aria-hidden="true"></canvas>
+                <div class="fabric-tile-label"><span>Cotton</span><span class="label-text">Cellulose</span></div>
+              </button>
+              <button type="button" class="fabric-tile" data-fabric="Silk" onclick="selectFabric('Silk')">
+                <canvas width="200" height="110" data-macro="Silk" aria-hidden="true"></canvas>
+                <div class="fabric-tile-label"><span>Silk</span><span class="label-text">Protein</span></div>
+              </button>
+              <button type="button" class="fabric-tile" data-fabric="Denim" onclick="selectFabric('Denim')">
+                <canvas width="200" height="110" data-macro="Denim" aria-hidden="true"></canvas>
+                <div class="fabric-tile-label"><span>Denim</span><span class="label-text">Twill</span></div>
+              </button>
+              <button type="button" class="fabric-tile" data-fabric="Polyester" onclick="selectFabric('Polyester')">
+                <canvas width="200" height="110" data-macro="Polyester" aria-hidden="true"></canvas>
+                <div class="fabric-tile-label"><span>Polyester</span><span class="label-text">Synthetic</span></div>
+              </button>
+              <button type="button" class="fabric-tile" data-fabric="Wool" onclick="selectFabric('Wool')">
+                <canvas width="200" height="110" data-macro="Wool" aria-hidden="true"></canvas>
+                <div class="fabric-tile-label"><span>Wool</span><span class="label-text">Animal</span></div>
+              </button>
+              <button type="button" class="fabric-tile" data-fabric="Linen" onclick="selectFabric('Linen')">
+                <canvas width="200" height="110" data-macro="Linen" aria-hidden="true"></canvas>
+                <div class="fabric-tile-label"><span>Linen</span><span class="label-text">Flax</span></div>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group" style="margin-top: var(--space-md);">
+            <span class="field-label">Colour &amp; Dye Sensitivity</span>
+            <div class="swatch-row" id="color-swatch-row">
+              <button type="button" class="color-btn is-selected" data-color="Crisp White" onclick="selectColor('Crisp White')">
+                <span class="swatch-dot dot-white" aria-hidden="true"></span>Crisp White
+              </button>
+              <button type="button" class="color-btn" data-color="Pastel / Light Blue" onclick="selectColor('Pastel / Light Blue')">
+                <span class="swatch-dot dot-pastel" aria-hidden="true"></span>Pastel / Light Blue
+              </button>
+              <button type="button" class="color-btn" data-color="Dark Navy / Black" onclick="selectColor('Dark Navy / Black')">
+                <span class="swatch-dot dot-navy" aria-hidden="true"></span>Dark Navy / Black
+              </button>
+              <button type="button" class="color-btn" data-color="Sage / Olive" onclick="selectColor('Sage / Olive')">
+                <span class="swatch-dot dot-sage" aria-hidden="true"></span>Sage / Olive
+              </button>
+              <button type="button" class="color-btn" data-color="Vibrant Crimson / Zari" onclick="selectColor('Vibrant Crimson / Zari')">
+                <span class="swatch-dot dot-crimson" aria-hidden="true"></span>Vibrant / Zari
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: var(--space-md);">
+            <div class="field-group">
+              <label class="field-label" for="water-hardness-select">Local Water Hardness</label>
+              <select id="water-hardness-select" class="select-control" onchange="runGarmentAnalysis()">
+                <option value="Soft">Soft (&lt;60 ppm — Colombo piped)</option>
+                <option value="Moderate" selected>Moderate (60–120 ppm — Suburban)</option>
+                <option value="Hard">Hard (&gt;120 ppm — Well / Dry Zone)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="garment-notes-input">Specific Details / Construction</label>
+              <input type="text" id="garment-notes-input" class="input-control" value="Everyday office shirt, buttoned cuffs">
+            </div>
+          </div>
+
+          <div class="hero-actions" style="margin-top: var(--space-lg);">
+            <button type="button" class="btn btn-primary" id="analyze-btn" onclick="runGarmentAnalysis(true)">
+              <i data-lucide="wand-sparkles" width="18" height="18" aria-hidden="true"></i>
+              <span>Analyse Garment</span>
+            </button>
+            <button type="button" class="btn btn-sage" onclick="saveCurrentCarePlan()">
+              <i data-lucide="bookmark-plus" width="18" height="18" aria-hidden="true"></i>
+              <span>Save Care Plan</span>
+            </button>
+          </div>
+          <div id="analyzer-feedback" class="inline-banner is-sage" style="margin-top: var(--space-md);">
+            <i data-lucide="check-circle-2" width="18" height="18" aria-hidden="true"></i>
+            <span id="analyzer-feedback-text">Showing verified care profile for Crisp White Cotton Shirt.</span>
+          </div>
+        </div>
+
+        <!-- Right Output Panel: Smart Care Recommendations -->
+        <div class="panel" id="care-recommendations-panel">
+          <div class="section-header" style="margin-bottom: var(--space-md);">
+            <div>
+              <span class="label-text" id="rec-confidence-label">ResNet-50 Confidence: 94.2% · Hybrid Care Engine</span>
+              <h3 class="subhead" id="rec-garment-heading" style="margin-top: 2px;">Crisp White Cotton Shirt</h3>
+            </div>
+            <span class="tag" id="rec-mildew-badge">High Cellulose Mildew Risk</span>
+          </div>
+
+          <!-- Dynamic ISO 3758 Symbol Strip -->
+          <div class="iso-strip" id="iso-dynamic-strip" aria-label="Generated ISO 3758 laundry symbols">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- 4 Structured Care Cards with Realistic Studio Visuals -->
+          <div class="care-cards-grid" style="margin-top: var(--space-md);">
+            <article class="care-card">
+              <canvas id="canvas-care-wash" class="care-card-visual" width="320" height="130" aria-hidden="true"></canvas>
+              <div class="care-card-body">
+                <span class="tag tag-sky">Washing &amp; Temperature</span>
+                <strong id="rec-wash-title">40°C Normal Cycle · 3/4 Drum Fill</strong>
+                <p id="rec-wash-desc" style="margin:0; font-size:0.88rem; color:var(--on-surface-variant);"></p>
+              </div>
+            </article>
+
+            <article class="care-card">
+              <canvas id="canvas-care-water" class="care-card-visual" width="320" height="130" aria-hidden="true"></canvas>
+              <div class="care-card-body">
+                <span class="tag">Detergent &amp; Water Chemistry</span>
+                <strong id="rec-detergent-title">Liquid Neutral Detergent</strong>
+                <p id="rec-detergent-desc" style="margin:0; font-size:0.88rem; color:var(--on-surface-variant);"></p>
+              </div>
+            </article>
+
+            <article class="care-card">
+              <canvas id="canvas-care-dry" class="care-card-visual" width="320" height="130" aria-hidden="true"></canvas>
+              <div class="care-card-body">
+                <span class="tag tag-sky">Drying &amp; Airflow Routine</span>
+                <strong id="rec-dry-title">Extra Spin + Ventilated Shade Dry</strong>
+                <p id="rec-dry-desc" style="margin:0; font-size:0.88rem; color:var(--on-surface-variant);"></p>
+              </div>
+            </article>
+
+            <article class="care-card">
+              <canvas id="canvas-care-iron" class="care-card-visual" width="320" height="130" aria-hidden="true"></canvas>
+              <div class="care-card-body">
+                <span class="tag">Ironing Heat &amp; Wardrobe Storage</span>
+                <strong id="rec-iron-title">200°C (3-Dot) Steam · Spaced Hanger</strong>
+                <p id="rec-iron-desc" style="margin:0; font-size:0.88rem; color:var(--on-surface-variant);"></p>
+              </div>
+            </article>
+          </div>
+
+          <div class="inline-banner is-info" style="margin-top: var(--space-md);">
+            <i data-lucide="shield-alert" width="18" height="18" aria-hidden="true"></i>
+            <div>
+              <strong>Sri Lankan Lifespan &amp; Storage Tip:</strong>
+              <span id="rec-storage-note"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 4: Sri Lankan Weather-Based Guidance -->
+    <section id="weather" class="app-section">
+      <div class="section-header">
+        <div>
+          <span class="label-text">Weather API Integration · OpenWeatherMap Adapter</span>
+          <h2 class="headline section-title">Sri Lankan <strong>Weather-Based Care Guidance</strong></h2>
+        </div>
+        <div class="field-group" style="min-width: 240px;">
+          <label class="field-label" for="sl-city-select">Select Sri Lankan Region</label>
+          <select id="sl-city-select" class="select-control" onchange="selectCityWeather(this.value)">
+            <option value="colombo">Colombo (Southwest Monsoon · Coastal)</option>
+            <option value="kandy">Kandy (Central Hills · High Dampness)</option>
+            <option value="galle">Galle (Southern Coast · Salt &amp; Rain)</option>
+            <option value="jaffna">Jaffna (Northern Dry Zone · Intense UV)</option>
+            <option value="nuwara">Nuwara Eliya (Cool Mist · Slow Evaporation)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="weather-grid">
+        <div class="panel">
+          <span class="field-label">Select Climate Condition Scenario</span>
+          <div class="weather-scenario-tabs" style="margin-top: var(--space-xs);">
+            <button type="button" class="choice-card is-selected" data-weather="monsoon" onclick="setWeatherScenario('monsoon')">
+              <i data-lucide="cloud-rain-wind" width="18" height="18" aria-hidden="true"></i>
+              <span>Monsoon Rainy</span>
+            </button>
+            <button type="button" class="choice-card" data-weather="humid" onclick="setWeatherScenario('humid')">
+              <i data-lucide="droplets" width="18" height="18" aria-hidden="true"></i>
+              <span>High Humidity</span>
+            </button>
+            <button type="button" class="choice-card" data-weather="sunny" onclick="setWeatherScenario('sunny')">
+              <i data-lucide="sun" width="18" height="18" aria-hidden="true"></i>
+              <span>Tropical Sun</span>
+            </button>
+          </div>
+
+          <div class="studio-frame" style="margin-top: var(--space-md);">
+            <canvas id="canvas-weather-scene" class="studio-canvas" width="600" height="260" aria-label="Sri Lankan climate scenario visual"></canvas>
+            <div class="studio-caption">
+              <span id="weather-scene-caption">Colombo Monsoon — Indoor Airflow &amp; Dehumidified Drying</span>
+              <span class="mono-figure" id="weather-api-badge">API Sync: 28°C · 86% RH</span>
+            </div>
+          </div>
+
+          <div class="dashboard-strip" style="margin-top: var(--space-md);">
+            <div class="kpi-tile">
+              <div class="label-text">Ambient Temp / Humidity</div>
+              <div class="kpi-value mono-figure" id="weather-temp-rh">28°C · 86%</div>
+              <p class="caption-sage" id="weather-threshold-note">Inside 20–30°C &amp; &ge;70% mildew zone</p>
+            </div>
+            <div class="kpi-tile">
+              <div class="label-text">Mildew &amp; Musty Odour Risk</div>
+              <div class="kpi-value mono-figure" id="weather-risk-label">High (84/100)</div>
+              <div class="risk-meter" aria-hidden="true">
+                <div class="risk-fill" id="weather-risk-bar" style="width: 84%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-sky">
+          <h3 class="subhead" id="weather-protocol-title">Southwest Monsoon Drying &amp; Mould Prevention Protocol</h3>
+          <p class="caption-sage" id="weather-protocol-lead">When indoor humidity exceeds 80%, damp laundry lingering past 24 hours rapidly breeds musty bacteria and fungal hyphae.</p>
+
+          <div class="list-stack" id="weather-advice-list" style="margin-top: var(--space-md);">
+            <!-- Populated by JS -->
+          </div>
+
+          <div class="panel" style="margin-top: var(--space-md);">
+            <div class="section-header" style="margin-bottom: var(--space-sm);">
+              <strong style="font-size: 0.95rem;">Seasonal Relative Humidity &amp; Indoor Drying Time</strong>
+              <span class="label-text">Sri Lanka Reference</span>
+            </div>
+            <div class="chart-box" style="min-height: 230px;">
+              <canvas id="chart-sl-weather"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 5 & 6: Clothing Damage Identification & Repair Guide -->
+    <section id="damage" class="app-section">
+      <div class="section-header">
+        <div>
+          <span class="label-text">AI-Assisted Visual Diagnosis &amp; Restoration</span>
+          <h2 class="headline section-title">Clothing Damage <strong>Identification &amp; Repair Lab</strong></h2>
+        </div>
+        <span class="pill-status">
+          <i data-lucide="microscope" width="15" height="15" aria-hidden="true"></i>
+          <span>Micro-Wear &amp; Fungal Hyphae Scanner</span>
+        </span>
+      </div>
+
+      <div class="damage-grid">
+        <!-- Left: Damage Visual & Selector -->
+        <div class="panel">
+          <h3 class="subhead">Visual Damage Inspection</h3>
+          <p class="caption-sage">Upload a photo of affected fabric or inspect common Sri Lankan garment damage signatures.</p>
+
+          <div class="field-group" style="margin-top: var(--space-md);">
+            <label class="field-label" for="damage-photo-upload">Upload Damaged Garment Image (Optional)</label>
+            <input type="file" id="damage-photo-upload" class="input-control" accept="image/*" onchange="handleDamageUpload(this)">
+            <div id="damage-upload-preview" class="upload-preview-box">
+              <img id="damage-upload-img" src="" alt="Uploaded damaged textile preview">
+              <div class="studio-caption">
+                <span id="damage-upload-name">Uploaded damage sample</span>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="clearDamageUpload()">Clear</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="chip-grid" style="margin-top: var(--space-md);" id="damage-type-grid">
+            <button type="button" class="choice-card is-selected" data-damage="stain" onclick="selectDamageType('stain')">
+              <i data-lucide="droplet" width="16" height="16" aria-hidden="true"></i>
+              <span>Tea / Oil Stain</span>
+            </button>
+            <button type="button" class="choice-card" data-damage="mildew" onclick="selectDamageType('mildew')">
+              <i data-lucide="biohazard" width="16" height="16" aria-hidden="true"></i>
+              <span>Mildew Spots</span>
+            </button>
+            <button type="button" class="choice-card" data-damage="tear" onclick="selectDamageType('tear')">
+              <i data-lucide="scissors" width="16" height="16" aria-hidden="true"></i>
+              <span>Torn Seam</span>
+            </button>
+            <button type="button" class="choice-card" data-damage="hole" onclick="selectDamageType('hole')">
+              <i data-lucide="circle-dot" width="16" height="16" aria-hidden="true"></i>
+              <span>Button / Hole</span>
+            </button>
+            <button type="button" class="choice-card" data-damage="fading" onclick="selectDamageType('fading')">
+              <i data-lucide="sun-dim" width="16" height="16" aria-hidden="true"></i>
+              <span>Dye Fading</span>
+            </button>
+          </div>
+
+          <div class="studio-frame" style="margin-top: var(--space-md);">
+            <canvas id="canvas-damage-zoom" class="studio-canvas" width="540" height="300" aria-label="Macro textile damage diagnosis view"></canvas>
+            <div class="studio-caption">
+              <span id="damage-zoom-caption">Macro View — Organic Tea &amp; Lipid Stain on Cotton Weave</span>
+              <span class="tag tag-warn" id="damage-severity-tag">Treat Within 24h</span>
+            </div>
+          </div>
+
+          <div style="margin-top: var(--space-md);">
+            <button type="button" class="btn btn-primary" onclick="runDamageDiagnosis()">
+              <i data-lucide="scan-eye" width="18" height="18" aria-hidden="true"></i>
+              <span>Run Visual Diagnosis</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Diagnosis Result & Step-by-Step Repair Guide -->
+        <div class="panel">
+          <div class="section-header" style="margin-bottom: var(--space-sm);">
+            <div>
+              <span class="label-text" id="diag-engine-meta">AI Pattern Classification · 91.5% Match</span>
+              <h3 class="subhead" id="diag-title">Organic Tannin &amp; Oil Stain Detected</h3>
+            </div>
+            <span class="tag" id="diag-recoverability">High Recoverability</span>
+          </div>
+
+          <p id="diag-description" style="margin-top: var(--space-xs); color: var(--on-surface-variant);"></p>
+
+          <div id="diag-safety-alert" class="inline-banner is-warn" style="margin-top: var(--space-sm);">
+            <i data-lucide="alert-triangle" width="18" height="18" aria-hidden="true"></i>
+            <span id="diag-safety-text"></span>
+          </div>
+
+          <div style="margin-top: var(--space-lg);">
+            <div class="section-header" style="margin-bottom: var(--space-sm);">
+              <h4 class="subhead">Step-by-Step Repair &amp; Maintenance Guide</h4>
+              <span class="label-text">Illustrated Method</span>
+            </div>
+
+            <div class="studio-frame" style="margin-bottom: var(--space-md);">
+              <canvas id="canvas-repair-diagram" class="studio-canvas" width="560" height="150" aria-label="Step-by-step textile repair illustration"></canvas>
+            </div>
+
+            <div class="repair-steps-list" id="repair-steps-container">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 7: Care Reminders System -->
+    <section id="reminders" class="app-section">
+      <div class="section-header">
+        <div>
+          <span class="label-text">Proactive Wardrobe Maintenance</span>
+          <h2 class="headline section-title">Care <strong>Reminders &amp; Seasonal Schedule</strong></h2>
+        </div>
+        <div class="tab-bar" style="margin-bottom: 0;">
+          <button type="button" class="tab-btn is-active" data-rem-filter="all" onclick="filterReminders('all')">All</button>
+          <button type="button" class="tab-btn" data-rem-filter="pending" onclick="filterReminders('pending')">Pending</button>
+          <button type="button" class="tab-btn" data-rem-filter="done" onclick="filterReminders('done')">Completed</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <form onsubmit="addReminder(event)" class="form-row">
+          <div class="field-group">
+            <label class="field-label" for="rem-title-input">Garment or Maintenance Task</label>
+            <input type="text" id="rem-title-input" class="input-control" placeholder="e.g., Air silk sarees &amp; refresh closet silica gel" required>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="rem-cat-select">Routine Category</label>
+            <select id="rem-cat-select" class="select-control">
+              <option value="Laundering">Laundering</option>
+              <option value="Mildew &amp; Airing">Mildew &amp; Airing</option>
+              <option value="Repair &amp; Sewing">Repair &amp; Sewing</option>
+              <option value="Seasonal Storage">Seasonal Storage</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="rem-freq-select">Frequency</label>
+            <select id="rem-freq-select" class="select-control">
+              <option value="Weekly">Weekly</option>
+              <option value="Fortnightly">Fortnightly</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Monsoon Check">Monsoon Check</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="rem-date-input">Next Due Date</label>
+            <input type="date" id="rem-date-input" class="input-control" value="2026-11-30" required>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="bell-plus" width="18" height="18" aria-hidden="true"></i>
+            <span>Add Reminder</span>
+          </button>
+        </form>
+
+        <div id="reminders-list" class="list-stack" style="margin-top: var(--space-lg);">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 11: User Dashboard & Saved Care Plans -->
+    <section id="dashboard" class="app-section">
+      <div class="section-header">
+        <div>
+          <span class="label-text">Saved Profiles, Preferences &amp; Sustainability Impact</span>
+          <h2 class="headline section-title">User <strong>Dashboard &amp; Care Plans</strong></h2>
+        </div>
+        <div class="hero-actions" style="margin-top: 0;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="exportCarePlansCsv()">
+            <i data-lucide="download" width="16" height="16" aria-hidden="true"></i>
+            <span>Export Plans (CSV)</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="reset-state-btn" onclick="resetSavedData(this)">
+            <i data-lucide="rotate-ccw" width="16" height="16" aria-hidden="true"></i>
+            <span>Reset Saved Data</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="dashboard-strip">
+        <div class="kpi-tile">
+          <div class="label-text">Saved Care Plans</div>
+          <div class="kpi-value mono-figure" id="dash-plans-count">0</div>
+          <p class="caption-sage">Persisted across sessions</p>
+        </div>
+        <div class="kpi-tile">
+          <div class="label-text">Pending Reminders</div>
+          <div class="kpi-value mono-figure" id="dash-rem-count">0</div>
+          <p class="caption-sage">Scheduled wardrobe checks</p>
+        </div>
+        <div class="kpi-tile">
+          <div class="label-text">Est. Annual Savings</div>
+          <div class="kpi-value mono-figure" id="dash-lkr-savings">LKR 18,500</div>
+          <p class="caption-sage">Avoided premature replacements</p>
+        </div>
+        <div class="kpi-tile">
+          <div class="label-text">Preferred Region</div>
+          <div class="kpi-value" id="dash-city-pref" style="font-size: 1.2rem;">Colombo</div>
+          <p class="caption-sage" id="dash-water-pref">Moderate water setting</p>
+        </div>
+      </div>
+
+      <div class="analyzer-grid" style="margin-top: var(--space-lg);">
+        <div class="panel">
+          <div class="section-header" style="margin-bottom: var(--space-md);">
+            <h3 class="subhead">Saved Garment Care Plans</h3>
+            <span class="label-text">Click Load to revisit in Analyser</span>
+          </div>
+          <div id="saved-plans-list" class="list-stack">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-header" style="margin-bottom: var(--space-sm);">
+            <h3 class="subhead">Garment Lifespan Extension &amp; Preferences</h3>
+            <span class="label-text">Months of Active Wear</span>
+          </div>
+          <div class="chart-box" style="min-height: 240px;">
+            <canvas id="chart-lifespan-impact"></canvas>
+          </div>
+
+          <div class="form-row" style="margin-top: var(--space-md);">
+            <div class="field-group">
+              <label class="field-label" for="pref-detergent-select">Preferred Detergent Format</label>
+              <select id="pref-detergent-select" class="select-control" onchange="savePreferences()">
+                <option value="Liquid Neutral">Liquid Neutral (Recommended)</option>
+                <option value="Enzyme Cold-Wash">Enzyme Cold-Wash Liquid</option>
+                <option value="Wool &amp; Silk Wash">pH-Neutral Silk &amp; Wool Wash</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="pref-drying-select">Primary Drying Setup</label>
+              <select id="pref-drying-select" class="select-control" onchange="savePreferences()">
+                <option value="Covered Balcony + Fan">Covered Balcony + Fan</option>
+                <option value="Dehumidifier Room">Dehumidifier Drying Room</option>
+                <option value="Shaded Outdoor Line">Shaded Outdoor Line</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 8: Educational Guide & Knowledge Hub -->
+    <section id="knowledge" class="app-section">
+      <div class="section-header">
+        <div>
+          <span class="label-text">Textile Science, ISO 3758 Standards &amp; Best Practice</span>
+          <h2 class="headline section-title">Educational Guide &amp; <strong>Knowledge Hub</strong></h2>
+        </div>
+      </div>
+
+      <div class="tab-bar" role="tablist">
+        <button type="button" class="tab-btn is-active" data-kb-tab="iso" onclick="switchKnowledgeTab('iso')">ISO 3758 Laundry Symbols</button>
+        <button type="button" class="tab-btn" data-kb-tab="mildew" onclick="switchKnowledgeTab('mildew')">Mildew &amp; Fabric Science</button>
+        <button type="button" class="tab-btn" data-kb-tab="fading" onclick="switchKnowledgeTab('fading')">Preventing Dye Fading</button>
+        <button type="button" class="tab-btn" data-kb-tab="mistakes" onclick="switchKnowledgeTab('mistakes')">11 Common Laundry Errors</button>
+      </div>
+
+      <!-- KB Tab 1: ISO 3758 -->
+      <div id="kb-panel-iso" class="panel">
+        <div class="card-grid">
+          <div class="panel-soft">
+            <h3 class="subhead">The 5 Core ISO 3758 Symbol Families</h3>
+            <p class="caption-sage">Click any symbol family below to inspect exact rules, line modifiers, and testing benchmarks (ISO 6330 &amp; AATCC 61).</p>
+            <div class="chip-grid" style="margin-top: var(--space-md);">
+              <button type="button" class="choice-card is-selected" data-iso-family="wash" onclick="selectIsoFamily('wash')">
+                <strong>1. Washing Tub</strong>
+                <span class="label-text">Temp &amp; Agitation Lines</span>
+              </button>
+              <button type="button" class="choice-card" data-iso-family="bleach" onclick="selectIsoFamily('bleach')">
+                <strong>2. Bleaching Triangle</strong>
+                <span class="label-text">Chlorine vs Oxygen</span>
+              </button>
+              <button type="button" class="choice-card" data-iso-family="dry" onclick="selectIsoFamily('dry')">
+                <strong>3. Drying Square</strong>
+                <span class="label-text">Tumble, Hang &amp; Flat</span>
+              </button>
+              <button type="button" class="choice-card" data-iso-family="iron" onclick="selectIsoFamily('iron')">
+                <strong>4. Ironing Iron</strong>
+                <span class="label-text">110°C / 150°C / 200°C</span>
+              </button>
+              <button type="button" class="choice-card" data-iso-family="pro" onclick="selectIsoFamily('pro')">
+                <strong>5. Dry Cleaning Circle</strong>
+                <span class="label-text">Solvents &amp; Wet Clean</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="panel" id="iso-detail-card">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div class="data-table-wrap" style="margin-top: var(--space-lg);">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>International Standard</th>
+                <th>Primary Purpose</th>
+                <th>Verification Scope</th>
+                <th>Consumer Benefit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>ISO 3758</strong></td>
+                <td>Global textile care symbol code (aligned with GINETEX)</td>
+                <td>Washing, bleaching, drying, ironing, professional care</td>
+                <td>Prevents irreversible damage across language markets</td>
+              </tr>
+              <tr>
+                <td><strong>ISO 6330</strong></td>
+                <td>Domestic washing and drying simulation</td>
+                <td>Post-wash shrinkage, dimensional stability, coating wear</td>
+                <td>Confirms safe wash cycles for sportswear and knits</td>
+              </tr>
+              <tr>
+                <td><strong>AATCC 61</strong></td>
+                <td>Accelerated laundering colourfastness</td>
+                <td>Dye retention, fading, and bleeding resistance</td>
+                <td>Protects dark navies, crimson sarees, and prints</td>
+              </tr>
+              <tr>
+                <td><strong>ISO 5077</strong></td>
+                <td>Dimensional change measurement</td>
+                <td>Garment size variation after laundering</td>
+                <td>Prevents wool felting and cotton shirt shrinkage</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- KB Tab 2: Mildew & Fabric Science -->
+      <div id="kb-panel-mildew" class="panel" style="display: none;">
+        <div class="card-grid">
+          <article class="panel-soft">
+            <span class="tag">Microbial Thresholds</span>
+            <h3 class="subhead" style="margin-top: var(--space-xs);">How Mould &amp; Mildew Attack Fabrics</h3>
+            <p>Mildew refers to pigmented fungal hyphae growing on organic surfaces. Optimal growth occurs between <strong>20°C and 30°C (68°–86°F)</strong> when relative humidity is <strong>70% or higher</strong> in dark, poorly ventilated cupboards.</p>
+            <ul>
+              <li><strong>Visual signature:</strong> White powder, irregular blotches, or a symmetric cross/star pattern spreading along both warp and fill threads.</li>
+              <li><strong>Temperature truth:</strong> Freezing below 0°C does <em>not</em> kill mildew spores; only temperatures above 46°C (115°F), UV sunlight, or dry air arrest growth.</li>
+              <li><strong>Bacteria vs Fungi:</strong> Water-damaged textiles contaminated by bacteria emit a sour odour first before turning musty.</li>
+            </ul>
+          </article>
+
+          <article class="panel-soft">
+            <span class="tag tag-sky">Fibre Susceptibility</span>
+            <h3 class="subhead" style="margin-top: var(--space-xs);">Cellulose vs Protein vs Synthetic</h3>
+            <ul>
+              <li><strong>Highest Risk (Cellulose &amp; Leather):</strong> Cotton, linen, ramie, rayon, leather, suede, and natural rubber provide abundant nutrients. Mildew engrains into leather pores, causing thin spots and permanent dye stains.</li>
+              <li><strong>Moderate Resistance:</strong> Polyester, nylon, acetate, and acrylic resist mildew but still stain if soiled with body oils or unsanitary dampness.</li>
+              <li><strong>Highest Natural Resistance:</strong> Silk and wool resist mildew unless left damp for prolonged periods.</li>
+            </ul>
+          </article>
+
+          <article class="panel-soft">
+            <span class="tag tag-warn">Remediation Chemistry</span>
+            <h3 class="subhead" style="margin-top: var(--space-xs);">Bleach &amp; Odour Removal Safety</h3>
+            <ul>
+              <li><strong>Ozone before washing:</strong> Dry items treated with ozone permanently oxidise musty odours before stain removal (avoid rubber and acetate dyes).</li>
+              <li><strong>Chlorine bleach:</strong> Only bleach that kills mildew, safe on white cotton/linen/ramie after colourfastness testing; <em>never</em> use on silk, wool, nylon, or coloured fabrics.</li>
+              <li><strong>Gentle alternatives:</strong> Sodium perborate (safe on most wool/silk/nylon, watch optical brighteners) or 3% hydrogen peroxide (mildest, safe on most colours).</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+
+      <!-- KB Tab 3: Preventing Dye Fading -->
+      <div id="kb-panel-fading" class="panel" style="display: none;">
+        <div class="card-grid">
+          <article class="panel-soft">
+            <span class="tag tag-sky">Tropical Chemistry</span>
+            <h3 class="subhead" style="margin-top: var(--space-xs);">Why Colours Fade Faster in Humid Climates</h3>
+            <p>In high-humidity regions, ambient moisture interacts with dye molecules through <strong>hydrolysis</strong>, weakening their bond to the fibre. Combined with hot water and drum friction, knit fabrics lose surface saturation in as few as 15–40 cycles.</p>
+          </article>
+          <article class="panel-soft">
+            <span class="tag">Structure Matters</span>
+            <h3 class="subhead" style="margin-top: var(--space-xs);">Knits vs Woven Construction</h3>
+            <p>Knit fabrics (T-shirts, sportswear jerseys) consist of interlocking loops that rub against one another in the drum, creating micro-abrasions that scatter light and make black garments look charcoal. Tightly woven shirts and trousers resist this mechanical abrasion better.</p>
+          </article>
+          <article class="panel-soft">
+            <span class="tag">4-Step Retention Protocol</span>
+            <h3 class="subhead" style="margin-top: var(--space-xs);">Cold, Inside-Out &amp; Liquid Care</h3>
+            <ul>
+              <li><strong>Turn inside out:</strong> Shields outer dyed yarns from drum friction.</li>
+              <li><strong>Cold water (&le;30°C):</strong> Prevents fibre swelling and dye release while lifting sweat salts.</li>
+              <li><strong>Liquid over powder:</strong> Powder residues stiffen fabric in humid weather and trap moisture.</li>
+              <li><strong>Air dry in shade:</strong> Direct tropical UV bleaches dyes rapidly; dry in ventilated shade.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+
+      <!-- KB Tab 4: 11 Common Laundry Errors -->
+      <div id="kb-panel-mistakes" class="panel" style="display: none;">
+        <div class="card-grid-compact" id="mistakes-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 9 & 10: About Us & Target Users -->
+    <section id="about" class="app-section">
+      <div class="section-header">
+        <div>
+          <span class="label-text">Sustainability Mission &amp; Community Impact</span>
+          <h2 class="headline section-title">About <strong>LankaWeave Care</strong> &amp; Who We Serve</h2>
+        </div>
+      </div>
+
+      <div class="panel-sage" style="margin-bottom: var(--space-xl);">
+        <div class="hero-grid" style="gap: var(--space-lg);">
+          <div>
+            <span class="tag">Sri Lankan Fashion Sustainability</span>
+            <h3 class="subhead" style="margin-top: var(--space-xs); font-size: 1.35rem;">Extending Garment Lifespans in a Climate-Challenged Island</h3>
+            <p style="margin-bottom: var(--space-sm);">
+              Global fashion contributes over <strong>10% of worldwide carbon emissions</strong>, while improper washing, hard-water mineral residue, and monsoon dampness silently cut garment lifespans short across Sri Lankan households.
+            </p>
+            <p style="margin: 0; color: var(--on-surface-variant);">
+              LankaWeave Care unites <strong>ResNet-50 visual textile classification</strong>, a <strong>hybrid recommendation engine</strong>, <strong>wear-pattern tracking</strong>, and <strong>localised weather intelligence</strong> so consumers preserve existing wardrobes, lower annual clothing replacement expenses, and curb unnecessary textile waste.
+            </p>
+          </div>
+          <div class="panel">
+            <strong style="display: block; margin-bottom: var(--space-sm);">AI &amp; Weather Architecture Stack</strong>
+            <div class="list-stack">
+              <div class="inline-banner is-info">
+                <i data-lucide="eye" width="18" height="18" aria-hidden="true"></i>
+                <span><strong>Computer Vision:</strong> Transfer-learned ResNet-50 CNN trained on 5,000+ garment &amp; fabric weave images (224&times;224 normalisation).</span>
+              </div>
+              <div class="inline-banner is-sage">
+                <i data-lucide="cloud-sun" width="18" height="18" aria-hidden="true"></i>
+                <span><strong>Weather API Adapter:</strong> Live humidity, rainfall, and UV guidance synced to Sri Lankan monsoon zones.</span>
+              </div>
+              <div class="inline-banner is-info">
+                <i data-lucide="git-merge" width="18" height="18" aria-hidden="true"></i>
+                <span><strong>Hybrid Engine &amp; Wear Tracker:</strong> Content-based fibre rules paired with wear-frequency forecasting.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="subhead" style="margin-bottom: var(--space-md);">Tailored Profiles for Every Sri Lankan Wardrobe</h3>
+      <div class="card-grid" id="target-users-grid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- Module 12: Contact Us -->
+    <section id="contact" class="app-section">
+      <div class="section-header">
+        <div>
+          <span class="label-text">Support, Restoration Queries &amp; Feedback</span>
+          <h2 class="headline section-title">Contact <strong>Our Textile Care Team</strong></h2>
+        </div>
+      </div>
+
+      <div class="analyzer-grid">
+        <div class="panel">
+          <form onsubmit="submitContactForm(event)" id="contact-form">
+            <div class="form-row">
+              <div class="field-group">
+                <label class="field-label" for="contact-name">Name</label>
+                <input type="text" id="contact-name" class="input-control" placeholder="e.g., Dilani Perera" required>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="contact-email">Email Address</label>
+                <input type="email" id="contact-email" class="input-control" placeholder="e.g., dilani@example.com" required>
+              </div>
+            </div>
+            <div class="field-group" style="margin-top: var(--space-md);">
+              <label class="field-label" for="contact-subject">Subject</label>
+              <input type="text" id="contact-subject" class="input-control" placeholder="e.g., Care advice for handloom cotton &amp; silk saree" required>
+            </div>
+            <div class="field-group" style="margin-top: var(--space-md);">
+              <label class="field-label" for="contact-message">Message</label>
+              <textarea id="contact-message" class="textarea-control" placeholder="Describe your garment fabric, stain, or local drying challenge..." required></textarea>
+            </div>
+            <div style="margin-top: var(--space-md); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-md);">
+              <button type="submit" class="btn btn-primary">
+                <i data-lucide="send" width="18" height="18" aria-hidden="true"></i>
+                <span>Submit Enquiry</span>
+              </button>
+              <span class="label-text">Typical response within 24 hours</span>
+            </div>
+            <div id="contact-status" class="inline-banner is-sage" style="display: none; margin-top: var(--space-md);">
+              <i data-lucide="check-circle" width="18" height="18" aria-hidden="true"></i>
+              <span id="contact-status-text"></span>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel-soft">
+          <h3 class="subhead">Sri Lankan Garment Care Helpdesk</h3>
+          <p class="caption-sage">Practical support for delicate heritage weaves, monsoon wardrobe emergencies, and sustainable textile care.</p>
+          <div class="list-stack" style="margin-top: var(--space-md);">
+            <div class="reminder-item">
+              <div>
+                <strong>Colombo Care &amp; Research Studio</strong>
+                <div class="label-text">Monsoon Drying &amp; Handloom Preservation Desk</div>
+              </div>
+              <span class="tag">Mon–Sat · 09:00–17:30</span>
+            </div>
+            <div class="reminder-item">
+              <div>
+                <strong>ISO 3758 &amp; Testing Reference</strong>
+                <div class="label-text">ISO 6330, AATCC 61 &amp; ISO 5077 Compliance Guidance</div>
+              </div>
+              <span class="tag tag-sky">Standards Aligned</span>
+            </div>
+            <div class="reminder-item">
+              <div>
+                <strong>Delicate Silk &amp; Leather Triage</strong>
+                <div class="label-text">Guidance on when to escalate to specialist dry cleaning</div>
+              </div>
+              <span class="tag tag-warn">Specialist Care</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sources Attribution Footer -->
+    <footer class="app-section">
+      <div class="panel-soft">
+        <strong style="font-family: var(--font-headline); display: block; margin-bottom: var(--space-xs);">Research &amp; Domain Sources</strong>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--on-surface-variant); max-width: 90ch;">
+          Grounded in textile science and regional climate guidance from: K.A.I. Samanmali (<em>Smart Clothing Care &amp; Lifespan Assistant Proposal</em>, University of Vocational Technology); E. Gupta &amp; R. Simon (<em>Smart Wardrobe System Using Artificial Intelligence</em>); C. Horst (<em>A Mold and Mildew Primer</em>, FashionableCare); Illume International (<em>Care Label Guide: ISO 3758 Standards &amp; 5 Core Laundry Symbols</em>); SLYCAN Trust (<em>Managing Climate Risks in Sri Lanka’s Fashion and Apparel Sector</em>); Miele (<em>Tips for Dealing with Hard Water in Washing Machines</em>); YOU LAUNDRY &amp; NRE (<em>Monsoon &amp; Rainy Season Drying Guides</em>); Laundrywala (<em>11 Common Laundry Mistakes</em>); and Tropical Dye Retention &amp; Humid Storage Guides.
+        </p>
+      </div>
+    </footer>
+  </main>
+
+  <api-shim></api-shim>
+  <script>
+    /* =========================================================================
+       1. DOMAIN DATA & CARE KNOWLEDGE BASE
+       ========================================================================= */
+    const GARMENT_CARE_DB = {
+      Cotton: {
+        celluloseRisk: `High Cellulose Mildew Risk`,
+        washTemp: `30°C–40°C`,
+        washCycle: `Normal or Gentle (3/4 drum fill)`,
+        washDesc: `Wash at 30°C for coloured cottons or 40°C for whites. Never overload the drum past three-quarters capacity so water and surfactant circulate freely.`,
+        bleachCode: `non-chlorine`,
+        bleachLabel: `Non-chlorine only (Whites: cautious)`,
+        detergent: `Liquid neutral synthetic detergent. Avoid excess powder which traps moisture and feeds bacteria in Sri Lankan humidity.`,
+        dryCode: `shade`,
+        dryLabel: `Line dry in ventilated shade`,
+        dryDesc: `Run an extra 3–5 minute spin cycle to remove excess water. Hang inside-out with a hand’s width between shirts; dry in shaded airflow to prevent UV yellowing or fading.`,
+        ironCode: `3`,
+        ironTemp: `Up to 200°C (3 Dots)`,
+        ironDesc: `Press slightly damp with steam at 180°C–200°C. Use a pressing cloth over dark navy or printed cottons to prevent shine marks.`,
+        proCode: `wet-ok`,
+        proLabel: `Home wash / Wet clean safe`,
+        storage: `Ensure seams, collars, and pockets are bone dry before placing on wooden hangers. Use breathable cotton bags for long storage — never sealed plastic.`,
+        lifespanBase: 26,
+        lifespanCare: 42
+      },
+      Silk: {
+        celluloseRisk: `Low Mildew Risk · Delicate Protein Fibre`,
+        washTemp: `Cold (≤30°C) / Hand Soak`,
+        washCycle: `Hand Wash or Very Gentle (2 lines)`,
+        washDesc: `Soak briefly in cool water and gently squeeze suds through — never wring, twist, or scrub aggressively. Embroidered sarees or zari borders belong with a specialist dry cleaner.`,
+        bleachCode: `no`,
+        bleachLabel: `Do not bleach (No chlorine!)`,
+        detergent: `pH-neutral silk liquid detergent. Never use chlorine bleach (destroys protein fibres) or harsh alkaline powders.`,
+        dryCode: `flat`,
+        dryLabel: `Flat or padded-hanger shade dry`,
+        dryDesc: `Roll gently inside a clean white cotton towel to press out moisture. Air dry flat or on a padded hanger away from direct tropical sunlight.`,
+        ironCode: `1`,
+        ironTemp: `110°C (1 Dot · No direct steam)`,
+        ironDesc: `Press on the reverse side while barely damp using a clean muslin pressing cloth at low heat (110°C). Avoid direct water droplets which leave rings.`,
+        proCode: `p`,
+        proLabel: `Professional Dry Clean (P) recommended`,
+        storage: `Refold silk sarees periodically along different creases wrapped in unbleached muslin or soft cotton cloth. Keep off closet floors.`,
+        lifespanBase: 36,
+        lifespanCare: 72
+      },
+      Denim: {
+        celluloseRisk: `High Cellulose Risk · Heavy Twill`,
+        washTemp: `Cold (≤30°C)`,
+        washCycle: `Gentle Cycle · Inside Out`,
+        washDesc: `Turn jeans or denim jackets inside out and fasten zips/buttons. Wash in cold water (≤30°C) every 4–6 wears to prevent indigo dye loss and knee stretching.`,
+        bleachCode: `no`,
+        bleachLabel: `Do not bleach`,
+        detergent: `Liquid colour-care detergent. Powder residue clings inside heavy twill seams in humid weather.`,
+        dryCode: `shade`,
+        dryLabel: `Extra spin + Fan-assisted shade dry`,
+        dryDesc: `Thick denim retains water and develops musty odours rapidly during monsoons. Use an extra high spin, hang from the waistband in a fan-ventilated spot, and skip tumble dryers.`,
+        ironCode: `2`,
+        ironTemp: `150°C (2 Dots) · Optional`,
+        ironDesc: `Usually unnecessary if smoothed while damp. If pressing, iron inside out at medium heat (150°C).`,
+        proCode: `wet-ok`,
+        proLabel: `Gentle domestic wash preferred`,
+        storage: `Air out for 2 hours after wearing before hanging or folding. Never store slightly damp denim inside closed wardrobes.`,
+        lifespanBase: 30,
+        lifespanCare: 54
+      },
+      Polyester: {
+        celluloseRisk: `Moderate Odour Retention · Quick-Dry`,
+        washTemp: `Cold to 30°C`,
+        washCycle: `Gentle Synthetic Cycle (1 line)`,
+        washDesc: `Wash inside out in cold water to protect interlock knit loops from drum micro-abrasion and static pilling. Ideal quick-dry choice for Sri Lankan rainy days.`,
+        bleachCode: `no`,
+        bleachLabel: `Do not bleach`,
+        detergent: `Small dose of liquid detergent (half standard scoop for small loads). Never use fabric softeners on moisture-wicking sportswear as they coat fibres.`,
+        dryCode: `hang`,
+        dryLabel: `Hang dry indoors · Avoid tumble heat`,
+        dryDesc: `Dries rapidly indoors with a ceiling fan. High tumble-dryer heat degrades elastic fibres and melts coated trims.`,
+        ironCode: `1`,
+        ironTemp: `110°C (1 Dot) · Caution`,
+        ironDesc: `Most polyester garments release creases on hangers. If ironing, stay at 110°C max to avoid surface glazing or melting.`,
+        proCode: `wet-ok`,
+        proLabel: `Home wash ideal`,
+        storage: `Ensure gym kits and monsoon outerwear dry completely before storing so sweat salts do not trigger bacterial sour odours.`,
+        lifespanBase: 24,
+        lifespanCare: 44
+      },
+      Wool: {
+        celluloseRisk: `Low Mildew Risk · Felting Sensitive`,
+        washTemp: `Cold (≤30°C)`,
+        washCycle: `Hand Wash / Wool Programme (2 lines)`,
+        washDesc: `Agitation and warm water cause irreversible wool felting and shrinkage. Use dedicated wool programme or cool soak with zero wringing.`,
+        bleachCode: `no`,
+        bleachLabel: `Do not bleach (Never chlorine)`,
+        detergent: `Lanolin-safe pH-neutral wool wash. Sodium perborate or chlorine damages protein scales and optical brighteners.`,
+        dryCode: `flat`,
+        dryLabel: `Dry flat on towel · Never hang wet`,
+        dryDesc: `Hanging heavy wet wool stretches shoulders out of shape. Reshape flat over a dry towel in a cool, breezy room.`,
+        ironCode: `1`,
+        ironTemp: `110°C–150°C with Damp Cloth`,
+        ironDesc: `Hover steam lightly or press through a damp cotton cloth on low-medium setting.`,
+        proCode: `p`,
+        proLabel: `Dry Clean (P) for structured jackets`,
+        storage: `Clean thoroughly before Nuwara Eliya or off-season storage (body soil attracts pests and mildew). Store folded with cedar or silica desiccant.`,
+        lifespanBase: 32,
+        lifespanCare: 60
+      },
+      Linen: {
+        celluloseRisk: `High Cellulose Mildew Risk`,
+        washTemp: `30°C–40°C`,
+        washCycle: `Gentle Wash (1 line)`,
+        washDesc: `Linen softens with every wash but creases sharply if spun too hard. Use a gentle cycle with plenty of water clearance.`,
+        bleachCode: `non-chlorine`,
+        bleachLabel: `Oxygen bleach on whites only`,
+        detergent: `Mild liquid detergent. In hard-water zones, add 1/2 cup white vinegar to the final rinse to prevent mineral stiffness.`,
+        dryCode: `shade`,
+        dryLabel: `Shake out &amp; Shade hang dry`,
+        dryDesc: `Shake garment briskly right after spin and hang on wide wooden hangers away from harsh UV sun to protect flax strength.`,
+        ironCode: `3`,
+        ironTemp: `200°C (3 Dots) while damp`,
+        ironDesc: `Linen presses crisply while slightly damp using generous steam at 200°C.`,
+        proCode: `wet-ok`,
+        proLabel: `Home wash / Steam finish`,
+        storage: `Linen is a cellulose fibre highly susceptible to damp cupboard mildew. Space hangers at least 3 cm apart and air closets weekly.`,
+        lifespanBase: 28,
+        lifespanCare: 52
+      }
+    };
+
+    const SL_WEATHER_PROFILES = {
+      colombo: { name: `Colombo`, temp: 29, rh: 84, uv: 7, defaultMode: `monsoon` },
+      kandy:   { name: `Kandy`,   temp: 25, rh: 82, uv: 6, defaultMode: `humid` },
+      galle:   { name: `Galle`,   temp: 28, rh: 86, uv: 7, defaultMode: `monsoon` },
+      jaffna:  { name: `Jaffna`,  temp: 33, rh: 62, uv: 10, defaultMode: `sunny` },
+      nuwara:  { name: `Nuwara Eliya`, temp: 18, rh: 88, uv: 5, defaultMode: `humid` }
+    };
+
+    const WEATHER_SCENARIOS = {
+      monsoon: {
+        title: `Monsoon Rainy Season Drying &amp; Mould Protocol`,
+        lead: `Persistent rainfall pushes indoor relative humidity above 80%. Damp clothes left unventilated past 24 hours rapidly grow musty bacteria and fungal mildew.`,
+        riskScore: 86,
+        riskText: `High (86/100)`,
+        advice: [
+          { icon: `wind`, title: `Fan + Cross-Ventilation Zone`, text: `Place folding drying racks near a partially open window with a pedestal or ceiling fan aimed directly across garments. Leave a hand’s width of air space between items.` },
+          { icon: `refresh-cw`, title: `Extra 3–5 Minute Spin Cycle`, text: `Run a dedicated high-speed spin cycle before hanging to extract residual water and cut indoor drying time by hours.` },
+          { icon: `droplet`, title: `3/4 Drum &amp; Right Detergent Measure`, text: `Never pack the drum or overdose powder detergent — leftover soap residue holds dampness inside fibres and feeds odour bacteria.` },
+          { icon: `shirt`, title: `Rotate Monsoon Quick-Dry Fabrics`, text: `Prioritise polyester blends and thin cottons on multi-day rain streaks; reserve heavy denim and wool for dehumidifier or heated-airer rooms.` }
+        ]
+      },
+      humid: {
+        title: `High Tropical Humidity (&ge;70% RH) Wardrobe Protection`,
+        lead: `Temperatures of 20°–30°C paired with ≥70% relative humidity create ideal conditions for mildew propagation and dye hydrolysis inside closed cupboards.`,
+        riskScore: 76,
+        riskText: `Elevated (76/100)`,
+        advice: [
+          { icon: `door-open`, title: `Air Closets &amp; Never Overcrowd`, text: `Leave breathing room between hangers and open wardrobe doors every few days (especially when travelling) so stagnant moisture cannot settle.` },
+          { icon: `package-check`, title: `Use Low-Wattage or Silica Dehumidifiers`, text: `Place closet low-wattage dehumidifiers, activated charcoal, or calcium-chloride salt canisters inside enclosed cupboards; empty canisters periodically.` },
+          { icon: `footprints`, title: `Keep Leather Shoes &amp; Bags Off Closet Floors`, text: `Leather pores absorb moisture first and spread fungal spores to adjacent garments. Store footwear on ventilated racks.` },
+          { icon: `clock`, title: `Empty Washer Within 45 Minutes`, text: `Never leave damp laundry sitting in the machine drum. Wipe the rubber door seal dry after the day’s final wash and leave the door ajar.` }
+        ]
+      },
+      sunny: {
+        title: `Hot Tropical Sun &amp; Dye Preservation Protocol`,
+        lead: `Ultraviolet sunlight naturally kills mildew fungi, but prolonged direct midday exposure bleaches dark dyes and weakens delicate silk and linen fibres.`,
+        riskScore: 28,
+        riskText: `Low Mildew · High UV Fade Risk`,
+        advice: [
+          { icon: `sun-dim`, title: `Turn Inside Out &amp; Dry in Filtered Shade`, text: `UV rays kill mildew spores even in bright indirect shade. Turn navy, black, and bright garments inside out to prevent colour fading.` },
+          { icon: `timer`, title: `Timed UV Sanitising (Max 45 Mins)`, text: `For white cottons needing natural UV disinfection, avoid overexposure — bring garments indoors as soon as seams and pockets are dry.` },
+          { icon: `sparkles`, title: `Cold Water Stops Hydrolysis`, text: `Even in hot weather, wash at ≤30°C with liquid detergent to keep dye molecules locked in cotton and knitwear.` },
+          { icon: `archive`, title: `Cool Dry Storage`, text: `Cool air holds less moisture than warm air. Store freshly ironed garments only after steam heat has fully dissipated.` }
+        ]
+      }
+    };
+
+    const DAMAGE_DIAGNOSES = {
+      stain: {
+        title: `Organic Tannin, Sweat &amp; Lipid Stain`,
+        meta: `AI Vision Classification · 93.4% Match`,
+        recoverability: `High Recoverability`,
+        severityTag: `Treat Within 24h`,
+        caption: `Macro View — Organic Stain Bound to Surface Yarns`,
+        description: `Fresh food, tea, and skin-oil stains penetrate cellulose cotton and linen loops quickly. Heat from drying or ironing permanently sets protein and lipid stains.`,
+        safety: `Never apply hot water or tumble-dry heat before the stain fully lifts. Always test stain removers on an unexposed inner seam first.`,
+        steps: [
+          `Blot excess moisture immediately with a clean absorbent white cloth — never rub aggressively, which drives pigment deeper.`,
+          `Pre-treat spots gently by rubbing a few drops of neutral liquid synthetic detergent into the dampened stain from the reverse side.`,
+          `Soak in cool water (≤30°C) for 20 minutes. For hard-water zones, add 1/2 cup white vinegar to the final rinse.`,
+          `Wash on a gentle cycle and air dry in shaded airflow. Inspect under natural daylight before pressing.`
+        ]
+      },
+      mildew: {
+        title: `Fungal Mildew Hyphae &amp; Musty Odour`,
+        meta: `AI Pattern Detection · Cross/Star Warp-Fill Match`,
+        recoverability: `Moderate (Act Early)`,
+        severityTag: `Health &amp; Fibre Alert`,
+        caption: `Macro View — Fungal Hyphae Along Warp &amp; Fill Threads`,
+        description: `Pigmented fungal hyphae have begun colonising moist fibres, often forming splatter spots or a symmetric cross/star pattern along warp and fill directions. Unchecked growth rots cellulose fibres.`,
+        safety: `Wear gloves (and goggles plus an organic respirator for heavy contamination) so spores are not absorbed through skin or lungs. Always brush surface mildew OUTDOORS so spores do not scatter inside your home.`,
+        steps: [
+          `Brush off loose surface spores outdoors using a soft garment brush.`,
+          `If musty odour persists, dry the item completely and apply ozone oxidation treatment BEFORE wet cleaning to permanently break down organic odour compounds.`,
+          `Expose to indirect UV sunlight (or brief sun for whites) to kill residual mildew fungi without overexposing dyes.`,
+          `Wet-clean with neutral synthetic detergent; test an unexposed seam first if using sodium perborate or 3% hydrogen peroxide. Never use chlorine bleach on silk, wool, nylon, or colours.`
+        ]
+      },
+      tear: {
+        title: `Split Seam &amp; Structural Weave Tear`,
+        meta: `AI Edge Geometry · 90.8% Match`,
+        recoverability: `High (Hand Mending)`,
+        severityTag: `Mend Before Washing`,
+        caption: `Macro View — Separated Warp &amp; Weft Seam Tension`,
+        description: `Mechanical drum friction or seam tension has opened the lockstitch line or split adjacent yarns. Washing an unmended tear widens the gap rapidly.`,
+        safety: `Always mend tears BEFORE placing the garment in a washing machine. Match thread weight and fibre (cotton thread for cotton/linen; polyester thread for blends).`,
+        steps: [
+          `Trim loose frayed threads cleanly with small embroidery scissors without cutting intact weave yarns.`,
+          `Turn the garment inside out and align both torn edges flat; pin or place small iron-on fusible interfacing behind fragile weaves.`,
+          `Sew small, even whipstitches or backstitches 3–4 mm past both ends of the tear to anchor structural tension.`,
+          `Press the mended seam flat through a pressing cloth at the fabric’s safe ISO iron dot temperature.`
+        ]
+      },
+      hole: {
+        title: `Loose Button Shank or Small Pinhole`,
+        meta: `AI Structural Scan · 89.2% Match`,
+        recoverability: `High (5-Min Repair)`,
+        severityTag: `Quick Structural Fix`,
+        caption: `Macro View — Fastener Tension &amp; Yarn Snag`,
+        description: `Missing thread shanks cause buttons to pull through shirt plackets, while small pinholes from sharp pins or belt buckles can unravel into ladders on knit fabrics.`,
+        safety: `For snags on knitwear or silk sarees, never snip the pulled loop — pull it gently through to the reverse side with a blunt tapestry needle.`,
+        steps: [
+          `Thread a fine hand-sewing needle with doubled matching thread and knot the tail cleanly.`,
+          `For buttons: lay a toothpick across the button face while stitching 5–6 passes through the holes to build clearance.`,
+          `Remove the toothpick, wind the thread tightly 4 times beneath the button to create a durable thread shank, and knot on the underside.`,
+          `For pinholes: stitch a tiny circular darning lattice across the reverse side using single-ply thread.`
+        ]
+      },
+      fading: {
+        title: `UV Bleaching, Dye Hydrolysis &amp; Hard-Water Dullness`,
+        meta: `AI Colourimetry · Saturation Drop Detected`,
+        recoverability: `Preventive Restoration`,
+        severityTag: `Stop Further Fade`,
+        caption: `Macro View — Split Comparison: Fresh Dye vs Hydrolysed Fade`,
+        description: `High humidity accelerates dye hydrolysis while hot washes, powder residue, hard-water mineral film, and direct sun strip surface saturation—making navy look chalky and black look charcoal.`,
+        safety: `Direct natural daylight reveals true colour shift better than indoor LEDs. Avoid optical-brightener detergents on darks and pastels.`,
+        steps: [
+          `Strip mineral soap scum by running a cool rinse cycle with 1/2 cup of white vinegar (acts as a gentle natural water softener).`,
+          `Switch exclusively to liquid colour-safe detergent and cold water (≤30°C) for all dark and saturated garments.`,
+          `Always turn T-shirts, jeans, and knitwear inside out before loading to prevent drum micro-abrasion.`,
+          `Dry exclusively in ventilated shade — never under harsh midday tropical sunlight.`
+        ]
+      }
+    };
+
+    const LAUNDRY_MISTAKES = [
+      { num: `01`, title: `Ignoring the Care Label`, desc: `Treating silk sarees, wool sweaters, and cotton tees identically causes shrinkage, bleeding, and damaged coatings.` },
+      { num: `02`, title: `Overloading the Drum`, desc: `Packing beyond 3/4 full blocks water movement, leaves detergent residue, and keeps clothes wetter after spin.` },
+      { num: `03`, title: `Using Too Much Detergent`, desc: `Excess powder fails to rinse out in humid air, stiffening fibres and trapping moisture that feeds odour bacteria.` },
+      { num: `04`, title: `Washing Heavy Delicates at Home`, desc: `Embroidered sarees, structured blazers, wool coats, and dyed leather need specialist dry cleaning.` },
+      { num: `05`, title: `Leaving Damp Laundry in Drum`, desc: `Warm wet clothes left inside a closed washer for over an hour breed musty bacterial odours.` },
+      { num: `06`, title: `Hot Water on Dark Colours`, desc: `Temperatures above 30°C swell fibres and release dye molecules rapidly, fading navy and black items.` },
+      { num: `07`, title: `Direct Midday Sun on Dyes`, desc: `Prolonged tropical UV bleaches vibrant colours; dry inside-out in shaded airflow instead.` },
+      { num: `08`, title: `Delaying Stain Pre-Treatment`, desc: `Heat-dried or repeatedly washed stains bond chemically to fibres and become permanent.` },
+      { num: `09`, title: `Chlorine Bleach on Silk or Wool`, desc: `Sodium hypochlorite dissolves protein fibres and ruins nylon and coloured garments.` },
+      { num: `10`, title: `Storing Slightly Damp Clothes`, desc: `Putting away damp collars or pockets in closed cupboards guarantees monsoon mildew growth.` },
+      { num: `11`, title: `Ignoring Hard-Water Minerals`, desc: `Calcium and magnesium bind soap into dull residue; adjust detergent dosing or use a vinegar rinse.` }
+    ];
+
+    const TARGET_USERS = [
+      { role: `General Consumers`, icon: `users`, badge: `Everyday Wardrobes`, desc: `Clear washing, drying, and folding guidance without decoding confusing care tags.`, preset: { cat: `T-Shirt`, fabric: `Cotton`, color: `Dark Navy / Black` } },
+      { role: `Working Professionals`, icon: `briefcase`, badge: `Office &amp; Formal`, desc: `Keep crisp shirts, tailored trousers, and sarees wrinkle-free and fresh through humid commutes.`, preset: { cat: `Shirt`, fabric: `Cotton`, color: `Crisp White` } },
+      { role: `Students &amp; Young Adults`, icon: `graduation-cap`, badge: `Hostel &amp; Quick-Dry`, desc: `Fast indoor fan-drying routines and low-cost mending skills for denim and casual tees.`, preset: { cat: `Trousers`, fabric: `Denim`, color: `Dark Navy / Black` } },
+      { role: `Households &amp; Homemakers`, icon: `home`, badge: `Family Laundry`, desc: `Manage bulk family loads, hard-water dosing, and weekly monsoon wardrobe airing schedules.`, preset: { cat: `Dress`, fabric: `Linen`, color: `Sage / Olive` } },
+      { role: `Fashion-Conscious Users`, icon: `gem`, badge: `Silk &amp; Heritage`, desc: `Protect delicate silks, zari borders, and vibrant dyes from UV bleaching and crease damage.`, preset: { cat: `Saree`, fabric: `Silk`, color: `Vibrant Crimson / Zari` } },
+      { role: `Eco-Conscious Consumers`, icon: `leaf`, badge: `Zero-Waste Living`, desc: `Cut household replacement expenses and shrink fashion’s >10% carbon footprint through repair.`, preset: { cat: `Jacket`, fabric: `Wool`, color: `Pastel / Light Blue` } }
+    ];
+
+    const ISO_FAMILIES = {
+      wash: {
+        title: `Washing Tub Symbol (Temperature &amp; Agitation)`,
+        desc: `Numbers inside the tub show maximum water temperature (30°C, 40°C, 60°C). Lines underneath specify mechanical gentleness verified via ISO 6330.`,
+        items: [
+          { code: `No Underline`, detail: `Normal wash cycle — sturdy cottons and linens` },
+          { code: `1 Underline`, detail: `Gentle wash — reduced spin for knits &amp; synthetics` },
+          { code: `2 Underlines`, detail: `Very gentle wash — woollens and delicate weaves` },
+          { code: `Hand in Tub / Crossed`, detail: `Hand soak ≤30°C only, or do not wash at home` }
+        ]
+      },
+      bleach: {
+        title: `Bleaching Triangle Symbol`,
+        desc: `Prevents accidental chlorine damage on darks, elastane, prints, and protein fibres (silk/wool).`,
+        items: [
+          { code: `Empty Triangle`, detail: `Any bleach permitted (chlorine or oxygen)` },
+          { code: `Diagonal Striped Triangle`, detail: `Non-chlorine / oxygen bleach only (safe for most colours)` },
+          { code: `Crossed Triangle`, detail: `Do not bleach — use neutral liquid detergent only` }
+        ]
+      },
+      dry: {
+        title: `Drying Square Symbol`,
+        desc: `Protects elastic webbings, sportswear, and knits from thermal shrinkage and twisting.`,
+        items: [
+          { code: `Circle in Square (1/2 Dots)`, detail: `Tumble dry allowed (1 dot = low heat, 2 dots = normal)` },
+          { code: `Crossed Circle in Square`, detail: `Do not tumble dry — air dry only` },
+          { code: `Vertical / Horizontal Lines`, detail: `Vertical = hang dry; Horizontal = flat dry (essential for wool)` },
+          { code: `Diagonal Corner Line`, detail: `Dry in shade (critical for Sri Lankan UV protection)` }
+        ]
+      },
+      iron: {
+        title: `Ironing Symbol (Thermal Dots)`,
+        desc: `Matches iron soleplate heat to fibre melting and scorch thresholds.`,
+        items: [
+          { code: `1 Dot (≈110°C)`, detail: `Polyester, nylon, silk, spandex, TPU coatings (avoid steam)` },
+          { code: `2 Dots (≈150°C)`, detail: `Wool, denim, polyester-cotton blends` },
+          { code: `3 Dots (≈200°C)`, detail: `Pure cotton and linen (steam recommended)` },
+          { code: `Crossed Iron`, detail: `Do not iron — steam hang only` }
+        ]
+      },
+      pro: {
+        title: `Professional Care Circle Symbol`,
+        desc: `Guides specialist cleaners on solvents and wet-cleaning tolerances for suits, silk sarees, and coated jackets.`,
+        items: [
+          { code: `Letter P in Circle`, detail: `Dry clean with tetrachloroethylene / hydrocarbon solvents` },
+          { code: `Letter F in Circle`, detail: `Gentle hydrocarbon solvent only` },
+          { code: `Letter W in Circle`, detail: `Professional wet cleaning allowed` },
+          { code: `Crossed Circle`, detail: `Do not dry clean` }
+        ]
+      }
+    };
+
+    /* =========================================================================
+       2. APPLICATION STATE & NOTEBOOKLM SHIM PERSISTENCE
+       ========================================================================= */
+    let appState = {
+      selectedCategory: `Shirt`,
+      selectedFabric: `Cotton`,
+      selectedColor: `Crisp White`,
+      waterHardness: `Moderate`,
+      garmentNotes: `Everyday office shirt, buttoned cuffs`,
+      city: `colombo`,
+      weatherScenario: `monsoon`,
+      damageType: `stain`,
+      reminderFilter: `all`,
+      preferences: {
+        detergent: `Liquid Neutral`,
+        drying: `Covered Balcony + Fan`
+      },
+      savedPlans: [
+        { id: `plan-1`, category: `Saree`, fabric: `Silk`, color: `Vibrant Crimson / Zari`, waterHardness: `Moderate`, notes: `Kandyan festive silk with gold zari border`, savedAt: `2026-11-20` },
+        { id: `plan-2`, category: `Trousers`, fabric: `Denim`, color: `Dark Navy / Black`, waterHardness: `Moderate`, notes: `Everyday commuter jeans`, savedAt: `2026-11-22` }
+      ],
+      reminders: [
+        { id: `rem-1`, title: `Air enclosed wardrobe doors &amp; check closet silica canisters`, category: `Mildew &amp; Airing`, frequency: `Weekly`, dueDate: `2026-11-28`, done: false },
+        { id: `rem-2`, title: `Wipe washing machine rubber seal &amp; run drum clean`, category: `Laundering`, frequency: `Fortnightly`, dueDate: `2026-12-01`, done: false },
+        { id: `rem-3`, title: `Refold stored silk sarees in breathable muslin wraps`, category: `Seasonal Storage`, frequency: `Monthly`, dueDate: `2026-12-10`, done: true }
+      ]
+    };
+
+    let weatherChartInstance = null;
+    let lifespanChartInstance = null;
+
+    async function persistState() {
+      try {
+        if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === `function`) {
+          await window.notebookAppApi.setAppState(appState);
+        }
+      } catch (err) {
+        /* Fail gracefully in non-host environments */
+      }
+    }
+
+    function getThemeColor(varName, fallback) {
+      const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      return val || fallback;
+    }
+
+    /* =========================================================================
+       3. PHOTOGRAPHIC CANVAS STUDIO RENDERER (HIGH-RES PROCEDURAL VISUALS)
+       ========================================================================= */
+    function seededNoise(x, y) {
+      const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+      return n - Math.floor(n);
+    }
+
+    function drawHeroWardrobeCanvas() {
+      const canvas = document.getElementById(`canvas-hero-wardrobe`);
+      if (!canvas) return;
+      const ctx = canvas.getContext(`2d`);
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Sunlit warm room wall backdrop
+      const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+      bgGrad.addColorStop(0, `#f4efe4`);
+      bgGrad.addColorStop(0.55, `#eae3d3`);
+      bgGrad.addColorStop(1, `#dde7ef`);
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Diagonal natural window light shaft
+      ctx.save();
+      const sunGrad = ctx.createLinearGradient(0, 0, w * 0.75, h);
+      sunGrad.addColorStop(0, `rgba(255, 253, 245, 0.55)`);
+      sunGrad.addColorStop(1, `rgba(255, 253, 245, 0)`);
+      ctx.fillStyle = sunGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(w * 0.52, 0);
+      ctx.lineTo(w * 0.88, h);
+      ctx.lineTo(w * 0.12, h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Timber closet frame
+      ctx.fillStyle = `#cbb79b`;
+      ctx.fillRect(46, 36, w - 92, h - 72);
+      ctx.fillStyle = `#fbf9f4`;
+      ctx.fillRect(62, 52, w - 124, h - 104);
+
+      // Soft inner shadow on closet ceiling
+      const topShadow = ctx.createLinearGradient(0, 52, 0, 120);
+      topShadow.addColorStop(0, `rgba(22, 43, 73, 0.12)`);
+      topShadow.addColorStop(1, `rgba(22, 43, 73, 0)`);
+      ctx.fillStyle = topShadow;
+      ctx.fillRect(62, 52, w - 124, 68);
+
+      // Brushed steel hanging rod
+      const rodGrad = ctx.createLinearGradient(0, 96, 0, 108);
+      rodGrad.addColorStop(0, `#d7dee5`);
+      rodGrad.addColorStop(0.5, `#97a5b3`);
+      rodGrad.addColorStop(1, `#6c7a89`);
+      ctx.fillStyle = rodGrad;
+      ctx.fillRect(62, 96, w - 124, 11);
+
+      // Helper for wooden hanger
+      function drawHanger(cx) {
+        ctx.strokeStyle = `#6e7b88`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(cx, 96, 9, Math.PI, 0);
+        ctx.lineTo(cx + 9, 108);
+        ctx.stroke();
+
+        ctx.fillStyle = `#a8845d`;
+        ctx.beginPath();
+        ctx.moveTo(cx, 112);
+        ctx.lineTo(cx - 58, 138);
+        ctx.lineTo(cx - 54, 146);
+        ctx.lineTo(cx, 124);
+        ctx.lineTo(cx + 54, 146);
+        ctx.lineTo(cx + 58, 138);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Garment 1: Crisp White Linen Shirt
+      drawHanger(155);
+      const shirtGrad = ctx.createLinearGradient(95, 135, 215, 340);
+      shirtGrad.addColorStop(0, `#ffffff`);
+      shirtGrad.addColorStop(1, `#e7edf2`);
+      ctx.fillStyle = shirtGrad;
+      ctx.beginPath();
+      ctx.roundRect(96, 134, 118, 196, 12);
+      ctx.fill();
+      ctx.strokeStyle = `#cfd7df`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Shirt collar & fold shadow
+      ctx.fillStyle = `#dde5ec`;
+      ctx.beginPath();
+      ctx.moveTo(132, 134);
+      ctx.lineTo(155, 160);
+      ctx.lineTo(178, 134);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = `rgba(22,43,73,0.06)`;
+      ctx.fillRect(148, 162, 14, 166);
+
+      // Garment 2: Sage Cotton Kurta / Dress
+      drawHanger(295);
+      const sageGrad = ctx.createLinearGradient(240, 135, 355, 375);
+      sageGrad.addColorStop(0, `#688b70`);
+      sageGrad.addColorStop(0.5, `#4a6d52`);
+      sageGrad.addColorStop(1, `#3a5942`);
+      ctx.fillStyle = sageGrad;
+      ctx.beginPath();
+      ctx.roundRect(242, 136, 106, 234, 10);
+      ctx.fill();
+      // Pleat highlights
+      ctx.fillStyle = `rgba(255,255,255,0.12)`;
+      ctx.fillRect(266, 150, 10, 212);
+      ctx.fillRect(306, 150, 10, 212);
+
+      // Garment 3: Crimson & Gold Silk Saree on hanger
+      drawHanger(440);
+      const silkGrad = ctx.createLinearGradient(392, 136, 488, 360);
+      silkGrad.addColorStop(0, `#a33834`);
+      silkGrad.addColorStop(0.45, `#c04b44`);
+      silkGrad.addColorStop(1, `#7b2421`);
+      ctx.fillStyle = silkGrad;
+      ctx.beginPath();
+      ctx.roundRect(390, 136, 100, 224, 10);
+      ctx.fill();
+      // Gold Zari border
+      const zariGrad = ctx.createLinearGradient(390, 326, 490, 360);
+      zariGrad.addColorStop(0, `#d8b263`);
+      zariGrad.addColorStop(0.5, `#f1d592`);
+      zariGrad.addColorStop(1, `#b78e40`);
+      ctx.fillStyle = zariGrad;
+      ctx.fillRect(390, 322, 100, 26);
+
+      // Garment 4: Tailored Navy Wool Jacket
+      drawHanger(590);
+      const navyGrad = ctx.createLinearGradient(524, 132, 656, 355);
+      navyGrad.addColorStop(0, `#233d63`);
+      navyGrad.addColorStop(0.6, `#162b49`);
+      navyGrad.addColorStop(1, `#0f1d33`);
+      ctx.fillStyle = navyGrad;
+      ctx.beginPath();
+      ctx.roundRect(524, 134, 132, 220, 14);
+      ctx.fill();
+      // Lapels
+      ctx.fillStyle = `#2a4873`;
+      ctx.beginPath();
+      ctx.moveTo(568, 134);
+      ctx.lineTo(590, 212);
+      ctx.lineTo(552, 198);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(612, 134);
+      ctx.lineTo(590, 212);
+      ctx.lineTo(628, 198);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bottom Shelf: Folded Denim, Linen Cotton Bags & Silica Desiccant Jar
+      ctx.fillStyle = `#d7c6ae`;
+      ctx.fillRect(62, 386, w - 124, 12);
+
+      // Folded Denim stack
+      ctx.fillStyle = `#35557a`;
+      ctx.beginPath();
+      ctx.roundRect(96, 352, 130, 34, 6);
+      ctx.fill();
+      ctx.fillStyle = `#4b719b`;
+      ctx.beginPath();
+      ctx.roundRect(102, 330, 118, 24, 6);
+      ctx.fill();
+
+      // Breathable cotton storage bag
+      ctx.fillStyle = `#efe9dc`;
+      ctx.strokeStyle = `#c5bba7`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(260, 338, 140, 48, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Dehumidifier / Silica Canister & Sage Eucalyptus Sprig
+      ctx.fillStyle = `#e2ece3`;
+      ctx.beginPath();
+      ctx.roundRect(560, 336, 76, 50, 8);
+      ctx.fill();
+      ctx.fillStyle = `#3f6147`;
+      ctx.fillRect(574, 326, 48, 10);
+
+      // Subtle AI Bounding Box HUD Overlay on Navy Jacket
+      ctx.strokeStyle = `rgba(82, 130, 166, 0.78)`;
+      ctx.setLineDash([6, 4]);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(516, 126, 148, 236);
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = `rgba(22, 43, 73, 0.9)`;
+      ctx.beginPath();
+      ctx.roundRect(516, 98, 164, 24, 6);
+      ctx.fill();
+      ctx.fillStyle = `#ffffff`;
+      ctx.font = `600 11px Outfit, sans-serif`;
+      ctx.fillText(`Wool Blazer · Dry Clean (P)`, 526, 114);
+    }
+
+    function drawMacroFabricTexture(canvas, fabricType, colorOverride) {
+      if (!canvas) return;
+      const ctx = canvas.getContext(`2d`);
+      const w = canvas.width;
+      const h = canvas.height;
+
+      const palettes = {
+        Cotton:    { base: `#f2efe7`, warp: `#e6e1d5`, weft: `#fbfaf7`, shadow: `#d7d1c3` },
+        Silk:      { base: `#8d3b42`, warp: `#b95860`, weft: `#632228`, shadow: `#e5b9be` },
+        Denim:     { base: `#2c496b`, warp: `#3c628e`, weft: `#b8c7d8`, shadow: `#1c3048` },
+        Polyester: { base: `#4a6f8f`, warp: `#5b84a8`, weft: `#3b5974`, shadow: `#83aac9` },
+        Wool:      { base: `#766f66`, warp: `#8d857b`, weft: `#5d564e`, shadow: `#b2aaa0` },
+        Linen:     { base: `#dfd3be`, warp: `#cbbca3`, weft: `#efe6d6`, shadow: `#b4a389` }
+      };
+      const pal = palettes[fabricType] || palettes.Cotton;
+
+      ctx.fillStyle = pal.base;
+      ctx.fillRect(0, 0, w, h);
+
+      if (fabricType === `Cotton`) {
+        const step = 6;
+        for (let y = 0; y < h; y += step) {
+          for (let x = 0; x < w; x += step) {
+            const odd = ((x / step) + (y / step)) % 2 === 0;
+            const n = seededNoise(x, y) * 0.14;
+            ctx.fillStyle = odd ? pal.weft : pal.warp;
+            ctx.globalAlpha = 0.72 + n;
+            ctx.fillRect(x, y, step - 1, step - 1);
+          }
+        }
+        ctx.globalAlpha = 1;
+      } else if (fabricType === `Silk`) {
+        const sheen = ctx.createLinearGradient(0, 0, w, h);
+        sheen.addColorStop(0, pal.weft);
+        sheen.addColorStop(0.32, pal.base);
+        sheen.addColorStop(0.5, pal.shadow);
+        sheen.addColorStop(0.68, pal.warp);
+        sheen.addColorStop(1, pal.weft);
+        ctx.fillStyle = sheen;
+        ctx.fillRect(0, 0, w, h);
+        // Fine satin micro-threads
+        ctx.strokeStyle = `rgba(255,255,255,0.12)`;
+        ctx.lineWidth = 1;
+        for (let y = 0; y < h; y += 3) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+      } else if (fabricType === `Denim`) {
+        const step = 5;
+        for (let y = 0; y < h; y += step) {
+          for (let x = 0; x < w; x += step) {
+            const diag = ((x + y) / step) % 4;
+            ctx.fillStyle = diag === 0 ? pal.weft : (diag === 1 ? pal.warp : pal.shadow);
+            ctx.globalAlpha = 0.65 + seededNoise(x, y) * 0.25;
+            ctx.fillRect(x, y, step - 0.5, step - 0.5);
+          }
+        }
+        ctx.globalAlpha = 1;
+      } else if (fabricType === `Polyester`) {
+        // Interlocking knit loops
+        ctx.strokeStyle = pal.shadow;
+        ctx.lineWidth = 1.4;
+        for (let y = 4; y < h; y += 8) {
+          for (let x = 4; x < w; x += 8) {
+            ctx.beginPath();
+            ctx.moveTo(x - 3, y - 3);
+            ctx.lineTo(x, y + 3);
+            ctx.lineTo(x + 3, y - 3);
+            ctx.stroke();
+          }
+        }
+      } else if (fabricType === `Wool`) {
+        // Herringbone / fibrous twill
+        for (let y = 0; y < h; y += 4) {
+          for (let x = 0; x < w; x += 6) {
+            const n = seededNoise(x, y);
+            ctx.fillStyle = n > 0.5 ? pal.warp : pal.weft;
+            ctx.globalAlpha = 0.55;
+            ctx.fillRect(x + (y % 8 === 0 ? 2 : 0), y, 5, 3);
+          }
+        }
+        ctx.globalAlpha = 1;
+        // Soft surface fiber halo
+        ctx.strokeStyle = `rgba(255,255,255,0.16)`;
+        for (let i = 0; i < 90; i++) {
+          const rx = seededNoise(i, 1) * w;
+          const ry = seededNoise(i, 2) * h;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry);
+          ctx.lineTo(rx + (seededNoise(i, 3) - 0.5) * 14, ry + (seededNoise(i, 4) - 0.5) * 14);
+          ctx.stroke();
+        }
+      } else if (fabricType === `Linen`) {
+        // Authentic slubbed open weave
+        for (let y = 0; y < h; y += 6) {
+          ctx.fillStyle = seededNoise(1, y) > 0.7 ? pal.shadow : pal.weft;
+          ctx.fillRect(0, y, w, seededNoise(2, y) > 0.75 ? 4 : 3);
+        }
+        for (let x = 0; x < w; x += 7) {
+          ctx.fillStyle = seededNoise(x, 3) > 0.7 ? pal.shadow : pal.warp;
+          ctx.globalAlpha = 0.52;
+          ctx.fillRect(x, 0, seededNoise(x, 4) > 0.8 ? 4 : 3, h);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // Soft studio vignette for photographic depth
+      const vig = ctx.createRadialGradient(w * 0.45, h * 0.4, w * 0.1, w * 0.5, h * 0.5, w * 0.75);
+      vig.addColorStop(0, `rgba(255,255,255,0.12)`);
+      vig.addColorStop(1, `rgba(22,43,73,0.18)`);
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    function drawAllGarmentThumbnails() {
+      const canvases = document.querySelectorAll(`canvas[data-garment]`);
+      canvases.forEach(function (c) {
+        const type = c.getAttribute(`data-garment`);
+        const ctx = c.getContext(`2d`);
+        const w = c.width;
+        const h = c.height;
+        ctx.fillStyle = `#f3efe6`;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.fillStyle = `#162b49`;
+        ctx.strokeStyle = `#3f6147`;
+        ctx.lineWidth = 1.5;
+
+        if (type === `Shirt`) {
+          ctx.fillStyle = `#ffffff`;
+          ctx.beginPath();
+          ctx.moveTo(35, 14); ctx.lineTo(75, 14); ctx.lineTo(92, 32);
+          ctx.lineTo(82, 42); ctx.lineTo(74, 34); ctx.lineTo(74, 62);
+          ctx.lineTo(36, 62); ctx.lineTo(36, 34); ctx.lineTo(28, 42);
+          ctx.lineTo(18, 32); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        } else if (type === `Trousers`) {
+          ctx.fillStyle = `#2d4a6e`;
+          ctx.beginPath();
+          ctx.moveTo(36, 12); ctx.lineTo(74, 12); ctx.lineTo(78, 62);
+          ctx.lineTo(60, 62); ctx.lineTo(55, 34); ctx.lineTo(50, 62);
+          ctx.lineTo(32, 62); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        } else if (type === `Dress`) {
+          ctx.fillStyle = `#5f8067`;
+          ctx.beginPath();
+          ctx.moveTo(42, 12); ctx.lineTo(68, 12); ctx.lineTo(70, 30);
+          ctx.lineTo(84, 62); ctx.lineTo(26, 62); ctx.lineTo(40, 30);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        } else if (type === `Saree`) {
+          ctx.fillStyle = `#a63d32`;
+          ctx.beginPath();
+          ctx.moveTo(32, 14); ctx.lineTo(78, 14); ctx.lineTo(72, 62);
+          ctx.lineTo(36, 62); ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = `#dfb664`;
+          ctx.fillRect(36, 52, 37, 8);
+          ctx.beginPath();
+          ctx.moveTo(32, 14); ctx.lineTo(76, 56); ctx.lineWidth = 4; ctx.strokeStyle = `#dfb664`; ctx.stroke();
+        } else if (type === `T-Shirt`) {
+          ctx.fillStyle = `#6389aa`;
+          ctx.beginPath();
+          ctx.moveTo(38, 16); ctx.lineTo(72, 16); ctx.lineTo(90, 28);
+          ctx.lineTo(82, 38); ctx.lineTo(73, 33); ctx.lineTo(73, 62);
+          ctx.lineTo(37, 62); ctx.lineTo(37, 33); ctx.lineTo(28, 38);
+          ctx.lineTo(20, 28); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        } else if (type === `Jacket`) {
+          ctx.fillStyle = `#162b49`;
+          ctx.beginPath();
+          ctx.moveTo(34, 14); ctx.lineTo(76, 14); ctx.lineTo(94, 48);
+          ctx.lineTo(84, 52); ctx.lineTo(74, 34); ctx.lineTo(74, 62);
+          ctx.lineTo(36, 62); ctx.lineTo(36, 34); ctx.lineTo(26, 52);
+          ctx.lineTo(16, 48); ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = `#b8c7d8`;
+          ctx.beginPath(); ctx.moveTo(55, 16); ctx.lineTo(55, 62); ctx.stroke();
+        }
+      });
+    }
+
+    function drawAllMacroThumbnails() {
+      const canvases = document.querySelectorAll(`canvas[data-macro]`);
+      canvases.forEach(function (c) {
+        drawMacroFabricTexture(c, c.getAttribute(`data-macro`));
+      });
+    }
+
+    function drawCareEnvironmentCards() {
+      // 1. Washing Machine Drum Visual
+      const c1 = document.getElementById(`canvas-care-wash`);
+      if (c1) {
+        const ctx = c1.getContext(`2d`);
+        ctx.fillStyle = `#eef3f7`; ctx.fillRect(0, 0, 320, 130);
+        ctx.fillStyle = `#ffffff`; ctx.fillRect(88, 12, 144, 110);
+        ctx.strokeStyle = `#bcc6ce`; ctx.lineWidth = 2; ctx.strokeRect(88, 12, 144, 110);
+        // Drum circle
+        ctx.beginPath(); ctx.arc(160, 72, 38, 0, Math.PI * 2);
+        ctx.fillStyle = `#dde9f2`; ctx.fill();
+        ctx.strokeStyle = `#162b49`; ctx.lineWidth = 4; ctx.stroke();
+        // Water wave inside drum
+        ctx.beginPath(); ctx.arc(160, 72, 32, 0.15, Math.PI - 0.15);
+        ctx.fillStyle = `#699bc2`; ctx.fill();
+        ctx.fillStyle = `#162b49`; ctx.font = `600 11px JetBrains Mono, monospace`;
+        ctx.fillText(`3/4 LOAD`, 132, 64);
+      }
+
+      // 2. Water Chemistry / Liquid Detergent Visual
+      const c2 = document.getElementById(`canvas-care-water`);
+      if (c2) {
+        const ctx = c2.getContext(`2d`);
+        ctx.fillStyle = `#edf3ee`; ctx.fillRect(0, 0, 320, 130);
+        // Bottle
+        ctx.fillStyle = `#3f6147`;
+        ctx.beginPath(); ctx.roundRect(110, 26, 48, 86, 10); ctx.fill();
+        ctx.fillStyle = `#ffffff`; ctx.fillRect(118, 52, 32, 34);
+        ctx.fillStyle = `#162b49`; ctx.font = `600 10px Outfit, sans-serif`; ctx.fillText(`pH 7`, 123, 73);
+        // Droplets
+        ctx.fillStyle = `#5282a6`;
+        [195, 225, 210].forEach(function (dx, idx) {
+          const dy = 45 + idx * 24;
+          ctx.beginPath(); ctx.arc(dx, dy, 10, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+
+      // 3. Drying Rack & Fan Airflow Visual
+      const c3 = document.getElementById(`canvas-care-dry`);
+      if (c3) {
+        const ctx = c3.getContext(`2d`);
+        ctx.fillStyle = `#f4efe6`; ctx.fillRect(0, 0, 320, 130);
+        // Rack rails
+        ctx.strokeStyle = `#6e7b88`; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(60, 34); ctx.lineTo(230, 34); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(80, 34); ctx.lineTo(65, 118); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(210, 34); ctx.lineTo(225, 118); ctx.stroke();
+        // Spaced garments
+        [`#ffffff`, `#dde9f2`, `#688b70`].forEach(function (col, i) {
+          ctx.fillStyle = col;
+          ctx.beginPath(); ctx.roundRect(88 + i * 42, 36, 28, 58, 4); ctx.fill();
+          ctx.strokeStyle = `#bcc6ce`; ctx.lineWidth = 1; ctx.stroke();
+        });
+        // Fan breeze arcs
+        ctx.strokeStyle = `#5282a6`; ctx.lineWidth = 2;
+        [0, 1, 2].forEach(function (k) {
+          ctx.beginPath(); ctx.moveTo(246, 52 + k * 16); ctx.quadraticCurveTo(270, 46 + k * 16, 294, 54 + k * 16); ctx.stroke();
+        });
+      }
+
+      // 4. Steam Ironing & Wooden Hanger Storage
+      const c4 = document.getElementById(`canvas-care-iron`);
+      if (c4) {
+        const ctx = c4.getContext(`2d`);
+        ctx.fillStyle = `#f4efe6`; ctx.fillRect(0, 0, 320, 130);
+        // Ironing board
+        ctx.fillStyle = `#ffffff`; ctx.strokeStyle = `#c2cbc7`; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.roundRect(44, 78, 220, 22, 11); ctx.fill(); ctx.stroke();
+        // Steam iron silhouette
+        ctx.fillStyle = `#162b49`;
+        ctx.beginPath();
+        ctx.moveTo(116, 76); ctx.lineTo(194, 76); ctx.lineTo(186, 52);
+        ctx.lineTo(138, 52); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = `#5282a6`;
+        ctx.fillRect(142, 40, 38, 8);
+        // Steam puffs
+        ctx.fillStyle = `rgba(82,130,166,0.35)`;
+        ctx.beginPath(); ctx.arc(100, 68, 8, 0, Math.PI * 2); ctx.arc(88, 56, 6, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    function drawWeatherSceneCanvas(scenario, cityInfo) {
+      const canvas = document.getElementById(`canvas-weather-scene`);
+      if (!canvas) return;
+      const ctx = canvas.getContext(`2d`);
+      const w = canvas.width;
+      const h = canvas.height;
+
+      if (scenario === `monsoon`) {
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, `#3b5169`);
+        grad.addColorStop(1, `#738ea6`);
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+        // Monsoon clouds
+        ctx.fillStyle = `rgba(22,43,73,0.42)`;
+        [100, 220, 360, 490].forEach(function (cx) {
+          ctx.beginPath(); ctx.arc(cx, 54, 48, 0, Math.PI * 2); ctx.fill();
+        });
+        // Rain streaks
+        ctx.strokeStyle = `rgba(221,233,242,0.52)`; ctx.lineWidth = 1.5;
+        for (let i = 0; i < 65; i++) {
+          const rx = seededNoise(i, 7) * w;
+          const ry = seededNoise(i, 9) * h;
+          ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 12, ry + 28); ctx.stroke();
+        }
+        // Covered veranda silhouette with drying rack
+        ctx.fillStyle = `#f6f3ec`;
+        ctx.fillRect(36, 148, 250, 92);
+        ctx.fillStyle = `#162b49`;
+        ctx.fillRect(28, 140, 266, 10);
+        // Garments drying indoors
+        [`#ffffff`, `#dde9f2`, `#688b70`].forEach(function (col, idx) {
+          ctx.fillStyle = col; ctx.fillRect(68 + idx * 46, 162, 28, 54);
+        });
+      } else if (scenario === `humid`) {
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, `#a3bac7`);
+        grad.addColorStop(1, `#dfebe3`);
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+        // Coastal mist bands
+        ctx.fillStyle = `rgba(255,255,255,0.45)`;
+        ctx.fillRect(0, 120, w, 34);
+        ctx.fillRect(0, 174, w, 40);
+        // Wardrobe with dehumidifier & airflow arrows
+        ctx.fillStyle = `#ffffff`; ctx.fillRect(320, 62, 220, 174);
+        ctx.strokeStyle = `#3f6147`; ctx.lineWidth = 2; ctx.strokeRect(320, 62, 220, 174);
+        ctx.fillStyle = `#3f6147`; ctx.fillRect(350, 186, 48, 42);
+        ctx.fillStyle = `#ffffff`; ctx.font = `600 10px Outfit, sans-serif`; ctx.fillText(`DEHUM`, 356, 211);
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, `#9dc3de`);
+        grad.addColorStop(1, `#f7efe0`);
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h);
+        // Tropical sun
+        ctx.fillStyle = `#f0ba5a`;
+        ctx.beginPath(); ctx.arc(495, 62, 32, 0, Math.PI * 2); ctx.fill();
+        // Shaded pergola over clothesline
+        ctx.fillStyle = `#3f6147`;
+        ctx.fillRect(40, 96, 280, 12);
+        ctx.strokeStyle = `#5c635c`; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(60, 134); ctx.lineTo(300, 134); ctx.stroke();
+        [`#162b49`, `#ffffff`, `#8f5c24`].forEach(function (c, i) {
+          ctx.fillStyle = c; ctx.fillRect(88 + i * 64, 134, 38, 66);
+        });
+      }
+
+      // City label overlay badge
+      ctx.fillStyle = `rgba(22,43,73,0.88)`;
+      ctx.beginPath(); ctx.roundRect(22, 18, 220, 34, 8); ctx.fill();
+      ctx.fillStyle = `#ffffff`;
+      ctx.font = `600 13px Outfit, sans-serif`;
+      ctx.fillText(`${cityInfo.name} · ${cityInfo.temp}°C · ${cityInfo.rh}% RH`, 36, 40);
+    }
+
+    function drawDamageInspectionCanvas(damageType) {
+      const canvas = document.getElementById(`canvas-damage-zoom`);
+      if (!canvas) return;
+      const ctx = canvas.getContext(`2d`);
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Base macro weave
+      drawMacroFabricTexture(canvas, appState.selectedFabric || `Cotton`);
+
+      if (damageType === `stain`) {
+        const rg = ctx.createRadialGradient(270, 150, 14, 270, 150, 82);
+        rg.addColorStop(0, `rgba(116, 67, 29, 0.78)`);
+        rg.addColorStop(0.65, `rgba(148, 92, 46, 0.45)`);
+        rg.addColorStop(1, `rgba(148, 92, 46, 0)`);
+        ctx.fillStyle = rg;
+        ctx.beginPath(); ctx.ellipse(270, 150, 84, 62, 0.25, 0, Math.PI * 2); ctx.fill();
+      } else if (damageType === `mildew`) {
+        // Cross / star shape hyphae along warp & fill threads + splatter spots
+        [[185, 115, 36], [285, 165, 48], [360, 105, 28]].forEach(function (pt) {
+          const [cx, cy, rad] = pt;
+          ctx.strokeStyle = `rgba(42, 48, 42, 0.72)`;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(cx - rad, cy); ctx.lineTo(cx + rad, cy);
+          ctx.moveTo(cx, cy - rad); ctx.lineTo(cx, cy + rad);
+          ctx.stroke();
+          ctx.fillStyle = `rgba(60, 68, 56, 0.45)`;
+          ctx.beginPath(); ctx.arc(cx, cy, rad * 0.48, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (damageType === `tear`) {
+        ctx.fillStyle = `rgba(21, 34, 56, 0.85)`;
+        ctx.beginPath();
+        ctx.moveTo(175, 138); ctx.lineTo(265, 148); ctx.lineTo(355, 158);
+        ctx.lineTo(270, 166); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = `#ffffff`; ctx.lineWidth = 1.5;
+        for (let x = 190; x < 345; x += 10) {
+          ctx.beginPath(); ctx.moveTo(x, 140); ctx.lineTo(x + 4, 164); ctx.stroke();
+        }
+      } else if (damageType === `hole`) {
+        ctx.fillStyle = `#152238`;
+        ctx.beginPath(); ctx.arc(270, 150, 22, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `#d7d1c3`; ctx.lineWidth = 2; ctx.stroke();
+      } else if (damageType === `fading`) {
+        ctx.fillStyle = `rgba(255, 255, 255, 0.42)`;
+        ctx.fillRect(w / 2, 0, w / 2, h);
+        ctx.strokeStyle = `#162b49`; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke();
+        ctx.fillStyle = `#162b49`; ctx.fillRect(18, 18, 96, 24);
+        ctx.fillRect(w / 2 + 18, 18, 128, 24);
+        ctx.fillStyle = `#ffffff`; ctx.font = `600 11px Outfit, sans-serif`;
+        ctx.fillText(`Original Dye`, 28, 34);
+        ctx.fillText(`UV / Hydrolysis Fade`, w / 2 + 28, 34);
+      }
+
+      // AI target reticle
+      ctx.strokeStyle = `#162b49`;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.strokeRect(150, 72, 240, 156);
+      ctx.setLineDash([]);
+    }
+
+    function drawRepairDiagramCanvas(damageType) {
+      const canvas = document.getElementById(`canvas-repair-diagram`);
+      if (!canvas) return;
+      const ctx = canvas.getContext(`2d`);
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.fillStyle = `#f6f3ec`; ctx.fillRect(0, 0, w, h);
+
+      const boxW = (w - 64) / 3;
+      const labels = damageType === `mildew`
+        ? [`1. Brush Outdoors`, `2. Ozone / UV Air`, `3. Gentle Rinse`]
+        : damageType === `tear`
+          ? [`1. Align Edges`, `2. Whipstitch Lock`, `3. Press Flat`]
+          : damageType === `hole`
+            ? [`1. Spacer Pin`, `2. Wrap Shank`, `3. Knot Reverse`]
+            : damageType === `fading`
+              ? [`1. Vinegar Rinse`, `2. Inside-Out ≤30°C`, `3. Shade Air Dry`]
+              : [`1. Blot Reverse`, `2. Neutral Pre-Treat`, `3. Cold Wash`];
+
+      for (let i = 0; i < 3; i++) {
+        const bx = 16 + i * (boxW + 16);
+        ctx.fillStyle = `#ffffff`;
+        ctx.strokeStyle = `#dde2e0`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(bx, 14, boxW, h - 28, 8); ctx.fill(); ctx.stroke();
+
+        // Simple crisp icon graphics inside step diagram
+        const cx = bx + boxW / 2;
+        ctx.strokeStyle = `#162b49`; ctx.fillStyle = `#3f6147`; ctx.lineWidth = 2;
+        if (i === 0) {
+          ctx.beginPath(); ctx.arc(cx, 62, 18, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx - 10, 62); ctx.lineTo(cx + 10, 62); ctx.stroke();
+        } else if (i === 1) {
+          ctx.beginPath(); ctx.moveTo(cx - 24, 62); ctx.lineTo(cx + 24, 62); ctx.stroke();
+          for (let sx = cx - 18; sx <= cx + 18; sx += 9) {
+            ctx.beginPath(); ctx.moveTo(sx, 54); ctx.lineTo(sx + 4, 70); ctx.stroke();
+          }
+        } else {
+          ctx.beginPath(); ctx.arc(cx, 62, 18, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = `#ffffff`; ctx.beginPath();
+          ctx.moveTo(cx - 7, 62); ctx.lineTo(cx - 2, 68); ctx.lineTo(cx + 8, 56); ctx.stroke();
+        }
+
+        ctx.fillStyle = `#152238`;
+        ctx.font = `600 12px Outfit, sans-serif`;
+        ctx.textAlign = `center`;
+        ctx.fillText(labels[i], cx, h - 26);
+        ctx.textAlign = `left`;
+      }
+    }
+
+    /* =========================================================================
+       4. DYNAMIC ISO 3758 SVG GENERATOR
+       ========================================================================= */
+    function renderIsoSymbols(rec) {
+      const strip = document.getElementById(`iso-dynamic-strip`);
+      if (!strip) return;
+
+      const washLines = rec.washCycle.indexOf(`2 lines`) !== -1 ? 2 : (rec.washCycle.indexOf(`Gentle`) !== -1 ? 1 : 0);
+      const isHand = rec.washCycle.indexOf(`Hand`) !== -1;
+      const washNum = rec.washTemp.indexOf(`40`) !== -1 ? `40` : `30`;
+
+      const washSvg = `
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M8 16 L12 34 H36 L40 16" stroke-linejoin="round"/>
+          <path d="M9 21 Q16 18 24 21 T39 21"/>
+          ${isHand ? `<path d="M24 10 V26 M20 14 V24 M28 14 V24" stroke-width="2"/>` : `<text x="24" y="31" text-anchor="middle" font-size="11" font-weight="700" stroke="none" fill="currentColor">${washNum}</text>`}
+          ${washLines >= 1 ? `<line x1="12" y1="39" x2="36" y2="39"/>` : ``}
+          ${washLines >= 2 ? `<line x1="14" y1="43" x2="34" y2="43"/>` : ``}
+        </svg>`;
+
+      const bleachSvg = `
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <polygon points="24,10 40,36 8,36" stroke-linejoin="round"/>
+          ${rec.bleachCode === `no` ? `<line x1="10" y1="12" x2="38" y2="38"/><line x1="38" y1="12" x2="10" y2="38"/>` : `<line x1="18" y1="36" x2="29" y2="20"/><line x1="26" y1="36" x2="33" y2="25"/>`}
+        </svg>`;
+
+      const drySvg = `
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <rect x="10" y="10" width="28" height="28" rx="2"/>
+          ${rec.dryCode === `flat` ? `<line x1="16" y1="24" x2="32" y2="24"/>` : `<line x1="24" y1="15" x2="24" y2="33"/>`}
+          ${rec.dryCode === `shade` ? `<line x1="10" y1="20" x2="20" y2="10"/>` : ``}
+        </svg>`;
+
+      const dots = rec.ironCode === `3` ? 3 : (rec.ironCode === `2` ? 2 : 1);
+      const dotCircles = dots === 3
+        ? `<circle cx="19" cy="28" r="1.8" fill="currentColor" stroke="none"/><circle cx="25" cy="28" r="1.8" fill="currentColor" stroke="none"/><circle cx="31" cy="28" r="1.8" fill="currentColor" stroke="none"/>`
+        : (dots === 2
+          ? `<circle cx="22" cy="28" r="1.8" fill="currentColor" stroke="none"/><circle cx="29" cy="28" r="1.8" fill="currentColor" stroke="none"/>`
+          : `<circle cx="25" cy="28" r="1.8" fill="currentColor" stroke="none"/>`);
+
+      const ironSvg = `
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M12 33 H38 L34 21 H20 C15 21 12 27 12 33 Z" stroke-linejoin="round"/>
+          <path d="M18 21 V15 H31"/>
+          ${dotCircles}
+        </svg>`;
+
+      const proSvg = `
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <circle cx="24" cy="24" r="14"/>
+          <text x="24" y="28" text-anchor="middle" font-size="13" font-weight="700" stroke="none" fill="currentColor">${rec.proCode === `p` ? `P` : `W`}</text>
+        </svg>`;
+
+      strip.innerHTML = `
+        <div class="iso-cell">${washSvg}<span class="iso-cell-label">Wash</span><span class="iso-cell-sub">${rec.washTemp}</span></div>
+        <div class="iso-cell">${bleachSvg}<span class="iso-cell-label">Bleach</span><span class="iso-cell-sub">${rec.bleachLabel}</span></div>
+        <div class="iso-cell">${drySvg}<span class="iso-cell-label">Dry</span><span class="iso-cell-sub">${rec.dryLabel}</span></div>
+        <div class="iso-cell">${ironSvg}<span class="iso-cell-label">Iron</span><span class="iso-cell-sub">${rec.ironTemp}</span></div>
+        <div class="iso-cell">${proSvg}<span class="iso-cell-label">Pro Care</span><span class="iso-cell-sub">${rec.proLabel}</span></div>
+      `;
+    }
+
+    /* =========================================================================
+       5. INTERACTIVE MODULE HANDLERS (HOISTED FUNCTIONS)
+       ========================================================================= */
+    function scrollToSection(id) {
+      const target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView({ behavior: `smooth`, block: `start` });
+      }
+    }
+
+    function selectCategory(cat) {
+      appState.selectedCategory = cat;
+      document.querySelectorAll(`#garment-category-grid .garment-card`).forEach(function (el) {
+        el.classList.toggle(`is-selected`, el.getAttribute(`data-cat`) === cat);
+      });
+      runGarmentAnalysis(false);
+    }
+
+    function selectFabric(fabric) {
+      appState.selectedFabric = fabric;
+      document.querySelectorAll(`#fabric-gallery-grid .fabric-tile`).forEach(function (el) {
+        el.classList.toggle(`is-selected`, el.getAttribute(`data-fabric`) === fabric);
+      });
+      drawDamageInspectionCanvas(appState.damageType);
+      runGarmentAnalysis(false);
+    }
+
+    function selectColor(color) {
+      appState.selectedColor = color;
+      document.querySelectorAll(`#color-swatch-row .color-btn`).forEach(function (el) {
+        el.classList.toggle(`is-selected`, el.getAttribute(`data-color`) === color);
+      });
+      runGarmentAnalysis(false);
+    }
+
+    function handleGarmentUpload(input) {
+      if (!input || !input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const previewBox = document.getElementById(`garment-upload-preview`);
+      const previewImg = document.getElementById(`garment-upload-img`);
+      const nameSpan = document.getElementById(`garment-upload-name`);
+      if (previewImg) previewImg.src = URL.createObjectURL(file);
+      if (nameSpan) nameSpan.textContent = `${file.name} (Local AI Scan)`;
+      if (previewBox) previewBox.classList.add(`is-visible`);
+      runGarmentAnalysis(true);
+    }
+
+    function clearGarmentUpload() {
+      const input = document.getElementById(`garment-photo-upload`);
+      const previewBox = document.getElementById(`garment-upload-preview`);
+      if (input) input.value = ``;
+      if (previewBox) previewBox.classList.remove(`is-visible`);
+    }
+
+    function runGarmentAnalysis(showActionBanner) {
+      const waterEl = document.getElementById(`water-hardness-select`);
+      const notesEl = document.getElementById(`garment-notes-input`);
+      appState.waterHardness = waterEl ? waterEl.value : `Moderate`;
+      appState.garmentNotes = notesEl ? notesEl.value.trim() : ``;
+
+      const fabric = appState.selectedFabric || `Cotton`;
+      const cat = appState.selectedCategory || `Shirt`;
+      const color = appState.selectedColor || `Crisp White`;
+      const base = GARMENT_CARE_DB[fabric] || GARMENT_CARE_DB.Cotton;
+
+      // Clone and adapt for garment/colour/water conditions
+      const rec = Object.assign({}, base);
+      if (cat === `Saree` && (fabric === `Silk` || color.indexOf(`Zari`) !== -1)) {
+        rec.washCycle = `Specialist Dry Clean or Hand Soak`;
+        rec.washDesc = `Because sarees combine delicate folds with metallic zari or vibrant dyes, avoid machine tumbling. Dry clean (P) or gentle cold soak only if unembroidered.`;
+        rec.proCode = `p`;
+        rec.proLabel = `Specialist Dry Clean (P) advised`;
+      }
+      if (color.indexOf(`Dark`) !== -1 || color.indexOf(`Vibrant`) !== -1) {
+        rec.washTemp = `Cold (≤30°C)`;
+        rec.bleachCode = `no`;
+        rec.bleachLabel = `Do not bleach (Preserve dye)`;
+      }
+      if (appState.waterHardness === `Hard`) {
+        rec.detergent += ` Hard Water (>120 ppm): Add 1/2 cup white vinegar to the final rinse or use a mineral-fighting liquid detergent to prevent calcium stiffness.`;
+      }
+
+      const headingEl = document.getElementById(`rec-garment-heading`);
+      const confEl = document.getElementById(`rec-confidence-label`);
+      const badgeEl = document.getElementById(`rec-mildew-badge`);
+      const washTitle = document.getElementById(`rec-wash-title`);
+      const washDesc = document.getElementById(`rec-wash-desc`);
+      const detTitle = document.getElementById(`rec-detergent-title`);
+      const detDesc = document.getElementById(`rec-detergent-desc`);
+      const dryTitle = document.getElementById(`rec-dry-title`);
+      const dryDesc = document.getElementById(`rec-dry-desc`);
+      const ironTitle = document.getElementById(`rec-iron-title`);
+      const ironDesc = document.getElementById(`rec-iron-desc`);
+      const storageNote = document.getElementById(`rec-storage-note`);
+      const feedbackText = document.getElementById(`analyzer-feedback-text`);
+
+      if (headingEl) headingEl.textContent = `${color} ${fabric} ${cat}`;
+      if (confEl) confEl.textContent = `ResNet-50 Confidence: 94.2% · Water Hardness: ${appState.waterHardness}`;
+      if (badgeEl) badgeEl.textContent = rec.celluloseRisk;
+      if (washTitle) washTitle.textContent = `${rec.washTemp} · ${rec.washCycle}`;
+      if (washDesc) washDesc.textContent = rec.washDesc;
+      if (detTitle) detTitle.textContent = appState.waterHardness === `Hard` ? `Liquid + Vinegar Rinse (Hard Water)` : `Liquid Neutral Detergent`;
+      if (detDesc) detDesc.textContent = rec.detergent;
+      if (dryTitle) dryTitle.textContent = rec.dryLabel;
+      if (dryDesc) dryDesc.textContent = rec.dryDesc;
+      if (ironTitle) ironTitle.textContent = `${rec.ironTemp}`;
+      if (ironDesc) ironDesc.textContent = rec.ironDesc;
+      if (storageNote) storageNote.textContent = rec.storage + (appState.garmentNotes ? ` Note logged: "${appState.garmentNotes}".` : ``);
+
+      renderIsoSymbols(rec);
+      updateLifespanChart(fabric, rec.lifespanBase, rec.lifespanCare);
+
+      if (feedbackText) {
+        feedbackText.textContent = showActionBanner
+          ? `Analysis complete for ${color} ${fabric} ${cat} under ${appState.waterHardness.toLowerCase()} water.`
+          : `Live care profile active for ${color} ${fabric} ${cat}.`;
+      }
+      persistState();
+    }
+
+    function saveCurrentCarePlan() {
+      const plan = {
+        id: `plan-${Date.now()}`,
+        category: appState.selectedCategory,
+        fabric: appState.selectedFabric,
+        color: appState.selectedColor,
+        waterHardness: appState.waterHardness,
+        notes: appState.garmentNotes || `Standard care profile`,
+        savedAt: `2026-11-24`
+      };
+      appState.savedPlans.unshift(plan);
+      renderDashboard();
+      persistState();
+      const feedbackText = document.getElementById(`analyzer-feedback-text`);
+      if (feedbackText) {
+        feedbackText.textContent = `Saved "${plan.color} ${plan.fabric} ${plan.category}" to your User Dashboard.`;
+      }
+    }
+
+    function loadSavedPlan(planId) {
+      const found = appState.savedPlans.find(function (p) { return p.id === planId; });
+      if (!found) return;
+      appState.selectedCategory = found.category;
+      appState.selectedFabric = found.fabric;
+      appState.selectedColor = found.color;
+      appState.waterHardness = found.waterHardness;
+      appState.garmentNotes = found.notes;
+
+      const waterEl = document.getElementById(`water-hardness-select`);
+      const notesEl = document.getElementById(`garment-notes-input`);
+      if (waterEl) waterEl.value = found.waterHardness;
+      if (notesEl) notesEl.value = found.notes;
+
+      selectCategory(found.category);
+      selectFabric(found.fabric);
+      selectColor(found.color);
+      scrollToSection(`analyzer`);
+    }
+
+    function deleteSavedPlan(planId) {
+      appState.savedPlans = appState.savedPlans.filter(function (p) { return p.id !== planId; });
+      renderDashboard();
+      persistState();
+    }
+
+    /* Weather Guidance */
+    function selectCityWeather(cityKey) {
+      appState.city = cityKey;
+      const profile = SL_WEATHER_PROFILES[cityKey] || SL_WEATHER_PROFILES.colombo;
+      setWeatherScenario(profile.defaultMode);
+      const cityDash = document.getElementById(`dash-city-pref`);
+      if (cityDash) cityDash.textContent = profile.name;
+      const headerPill = document.getElementById(`header-climate-pill`);
+      if (headerPill) {
+        const span = headerPill.querySelector(`span`);
+        if (span) span.textContent = `${profile.name} · ${profile.rh}% RH`;
+      }
+      persistState();
+    }
+
+    function setWeatherScenario(scenarioKey) {
+      appState.weatherScenario = scenarioKey;
+      document.querySelectorAll(`.weather-scenario-tabs .choice-card`).forEach(function (el) {
+        el.classList.toggle(`is-selected`, el.getAttribute(`data-weather`) === scenarioKey);
+      });
+
+      const cityInfo = SL_WEATHER_PROFILES[appState.city] || SL_WEATHER_PROFILES.colombo;
+      const scen = WEATHER_SCENARIOS[scenarioKey] || WEATHER_SCENARIOS.monsoon;
+
+      const titleEl = document.getElementById(`weather-protocol-title`);
+      const leadEl = document.getElementById(`weather-protocol-lead`);
+      const tempRhEl = document.getElementById(`weather-temp-rh`);
+      const threshEl = document.getElementById(`weather-threshold-note`);
+      const riskLabelEl = document.getElementById(`weather-risk-label`);
+      const riskBarEl = document.getElementById(`weather-risk-bar`);
+      const capEl = document.getElementById(`weather-scene-caption`);
+      const apiBadge = document.getElementById(`weather-api-badge`);
+      const listEl = document.getElementById(`weather-advice-list`);
+
+      if (titleEl) titleEl.innerHTML = `${cityInfo.name}: ${scen.title}`;
+      if (leadEl) leadEl.textContent = scen.lead;
+      if (tempRhEl) tempRhEl.textContent = `${cityInfo.temp}°C · ${cityInfo.rh}%`;
+      if (threshEl) threshEl.textContent = cityInfo.rh >= 70 ? `Above ≥70% RH mildew growth threshold` : `Below 70% RH · Watch UV index (${cityInfo.uv})`;
+      if (riskLabelEl) riskLabelEl.textContent = scen.riskText;
+      if (riskBarEl) {
+        riskBarEl.style.width = `${scen.riskScore}%`;
+        riskBarEl.style.backgroundColor = scen.riskScore >= 70 ? `var(--warning)` : `var(--secondary)`;
+      }
+      if (capEl) capEl.textContent = `${cityInfo.name} (${scenarioKey.toUpperCase()}) — Sri Lanka Climate Protocol`;
+      if (apiBadge) apiBadge.textContent = `API Sync: ${cityInfo.temp}°C · ${cityInfo.rh}% RH`;
+
+      if (listEl) {
+        listEl.innerHTML = scen.advice.map(function (item) {
+          return `
+            <div class="repair-step-item">
+              <span class="step-badge"><i data-lucide="${item.icon}" width="15" height="15" aria-hidden="true"></i></span>
+              <div>
+                <strong>${item.title}</strong>
+                <p style="margin: 2px 0 0; font-size: 0.88rem; color: var(--on-surface-variant);">${item.text}</p>
+              </div>
+            </div>`;
+        }).join(``);
+      }
+
+      drawWeatherSceneCanvas(scenarioKey, cityInfo);
+      if (window.lucide) lucide.createIcons();
+      persistState();
+    }
+
+    /* Damage & Repair Lab */
+    function handleDamageUpload(input) {
+      if (!input || !input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const box = document.getElementById(`damage-upload-preview`);
+      const img = document.getElementById(`damage-upload-img`);
+      const name = document.getElementById(`damage-upload-name`);
+      if (img) img.src = URL.createObjectURL(file);
+      if (name) name.textContent = `${file.name} (Loaded for inspection)`;
+      if (box) box.classList.add(`is-visible`);
+      runDamageDiagnosis();
+    }
+
+    function clearDamageUpload() {
+      const input = document.getElementById(`damage-photo-upload`);
+      const box = document.getElementById(`damage-upload-preview`);
+      if (input) input.value = ``;
+      if (box) box.classList.remove(`is-visible`);
+    }
+
+    function selectDamageType(type) {
+      appState.damageType = type;
+      document.querySelectorAll(`#damage-type-grid .choice-card`).forEach(function (el) {
+        el.classList.toggle(`is-selected`, el.getAttribute(`data-damage`) === type);
+      });
+      runDamageDiagnosis();
+    }
+
+    function runDamageDiagnosis() {
+      const diag = DAMAGE_DIAGNOSES[appState.damageType] || DAMAGE_DIAGNOSES.stain;
+      const metaEl = document.getElementById(`diag-engine-meta`);
+      const titleEl = document.getElementById(`diag-title`);
+      const recEl = document.getElementById(`diag-recoverability`);
+      const descEl = document.getElementById(`diag-description`);
+      const safeEl = document.getElementById(`diag-safety-text`);
+      const capEl = document.getElementById(`damage-zoom-caption`);
+      const sevEl = document.getElementById(`damage-severity-tag`);
+      const stepsEl = document.getElementById(`repair-steps-container`);
+
+      if (metaEl) metaEl.textContent = diag.meta;
+      if (titleEl) titleEl.innerHTML = diag.title;
+      if (recEl) recEl.textContent = diag.recoverability;
+      if (descEl) descEl.textContent = diag.description;
+      if (safeEl) safeEl.textContent = diag.safety;
+      if (capEl) capEl.textContent = diag.caption;
+      if (sevEl) sevEl.textContent = diag.severityTag;
+
+      if (stepsEl) {
+        stepsEl.innerHTML = diag.steps.map(function (stepText, idx) {
+          return `
+            <div class="repair-step-item">
+              <span class="step-badge">${idx + 1}</span>
+              <div>${stepText}</div>
+            </div>`;
+        }).join(``);
+      }
+
+      drawDamageInspectionCanvas(appState.damageType);
+      drawRepairDiagramCanvas(appState.damageType);
+      persistState();
+    }
+
+    /* Care Reminders */
+    function addReminder(e) {
+      e.preventDefault();
+      const titleEl = document.getElementById(`rem-title-input`);
+      const catEl = document.getElementById(`rem-cat-select`);
+      const freqEl = document.getElementById(`rem-freq-select`);
+      const dateEl = document.getElementById(`rem-date-input`);
+      if (!titleEl || !titleEl.value.trim()) return;
+
+      appState.reminders.unshift({
+        id: `rem-${Date.now()}`,
+        title: titleEl.value.trim(),
+        category: catEl ? catEl.value : `Laundering`,
+        frequency: freqEl ? freqEl.value : `Weekly`,
+        dueDate: dateEl ? dateEl.value : `2026-12-01`,
+        done: false
+      });
+      titleEl.value = ``;
+      renderReminders();
+      renderDashboard();
+      persistState();
+    }
+
+    function toggleReminder(id) {
+      appState.reminders = appState.reminders.map(function (r) {
+        return r.id === id ? Object.assign({}, r, { done: !r.done }) : r;
+      });
+      renderReminders();
+      renderDashboard();
+      persistState();
+    }
+
+    function deleteReminder(id) {
+      appState.reminders = appState.reminders.filter(function (r) { return r.id !== id; });
+      renderReminders();
+      renderDashboard();
+      persistState();
+    }
+
+    function filterReminders(filter) {
+      appState.reminderFilter = filter;
+      document.querySelectorAll(`[data-rem-filter]`).forEach(function (btn) {
+        btn.classList.toggle(`is-active`, btn.getAttribute(`data-rem-filter`) === filter);
+      });
+      renderReminders();
+    }
+
+    function renderReminders() {
+      const container = document.getElementById(`reminders-list`);
+      if (!container) return;
+
+      const filtered = appState.reminders.filter(function (r) {
+        if (appState.reminderFilter === `pending`) return !r.done;
+        if (appState.reminderFilter === `done`) return r.done;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="inline-banner is-info"><span>No reminders in this view yet. Add a garment care task above to stay ahead of monsoon dampness.</span></div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(function (r) {
+        return `
+          <div class="reminder-item ${r.done ? `is-done` : ``}">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="toggleReminder('${r.id}')" aria-label="Toggle reminder completion">
+                <i data-lucide="${r.done ? `check-square` : `square`}" width="16" height="16" aria-hidden="true"></i>
+              </button>
+              <div>
+                <strong class="reminder-title">${r.title}</strong>
+                <div class="label-text">${r.category} · ${r.frequency} · Due ${r.dueDate}</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="tag ${r.done ? `` : `tag-sky`}">${r.done ? `Completed` : `Upcoming`}</span>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="deleteReminder('${r.id}')" aria-label="Delete reminder">
+                <i data-lucide="trash-2" width="15" height="15" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>`;
+      }).join(``);
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /* Dashboard & Preferences */
+    function renderDashboard() {
+      const plansCount = document.getElementById(`dash-plans-count`);
+      const remCount = document.getElementById(`dash-rem-count`);
+      const savingsEl = document.getElementById(`dash-lkr-savings`);
+      const waterPref = document.getElementById(`dash-water-pref`);
+      const listEl = document.getElementById(`saved-plans-list`);
+
+      const pendingCount = appState.reminders.filter(function (r) { return !r.done; }).length;
+      if (plansCount) plansCount.textContent = String(appState.savedPlans.length);
+      if (remCount) remCount.textContent = String(pendingCount);
+      if (savingsEl) {
+        const est = 12500 + appState.savedPlans.length * 3000;
+        savingsEl.textContent = `LKR ${est.toLocaleString()}`;
+      }
+      if (waterPref) waterPref.textContent = `${appState.waterHardness} water · ${appState.preferences.detergent}`;
+
+      if (!listEl) return;
+      if (appState.savedPlans.length === 0) {
+        listEl.innerHTML = `<div class="inline-banner is-info"><span>No saved garment care plans yet. Use the Clothing Information Analyser above and click "Save Care Plan".</span></div>`;
+        return;
+      }
+
+      listEl.innerHTML = appState.savedPlans.map(function (p) {
+        return `
+          <div class="reminder-item">
+            <div>
+              <strong>${p.color} ${p.fabric} ${p.category}</strong>
+              <div class="label-text">${p.waterHardness} Water · Saved ${p.savedAt} · ${p.notes}</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="loadSavedPlan('${p.id}')">Load</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="deleteSavedPlan('${p.id}')" aria-label="Remove saved plan">
+                <i data-lucide="x" width="15" height="15" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>`;
+      }).join(``);
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function savePreferences() {
+      const det = document.getElementById(`pref-detergent-select`);
+      const dry = document.getElementById(`pref-drying-select`);
+      if (det) appState.preferences.detergent = det.value;
+      if (dry) appState.preferences.drying = dry.value;
+      renderDashboard();
+      persistState();
+    }
+
+    function exportCarePlansCsv() {
+      const header = `Category,Fabric,Color,WaterHardness,Notes,SavedDate`;
+      const rows = appState.savedPlans.map(function (p) {
+        return `"${p.category}","${p.fabric}","${p.color}","${p.waterHardness}","${String(p.notes).replace(/"/g, `""`)}","${p.savedAt}"`;
+      });
+      const csv = [header].concat(rows).join(`\n`);
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
+        window.notebookAppApi.triggerFileDownload({
+          content: csv,
+          contentType: `text/csv`,
+          encoding: `UTF-8`,
+          filename: `lankaweave-care-plans.csv`
+        });
+      }
+    }
+
+    function resetSavedData(btn) {
+      if (btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        const span = btn.querySelector(`span`);
+        if (span) span.textContent = `Click again to confirm reset`;
+        return;
+      }
+      btn.dataset.armed = `false`;
+      const span = btn.querySelector(`span`);
+      if (span) span.textContent = `Reset Saved Data`;
+      appState.savedPlans = [];
+      appState.reminders = [];
+      renderDashboard();
+      renderReminders();
+      persistState();
+    }
+
+    /* Knowledge Hub */
+    function switchKnowledgeTab(tabKey) {
+      document.querySelectorAll(`[data-kb-tab]`).forEach(function (btn) {
+        btn.classList.toggle(`is-active`, btn.getAttribute(`data-kb-tab`) === tabKey);
+      });
+      [`iso`, `mildew`, `fading`, `mistakes`].forEach(function (k) {
+        const panel = document.getElementById(`kb-panel-${k}`);
+        if (panel) panel.style.display = k === tabKey ? `block` : `none`;
+      });
+    }
+
+    function selectIsoFamily(famKey) {
+      document.querySelectorAll(`[data-iso-family]`).forEach(function (btn) {
+        btn.classList.toggle(`is-selected`, btn.getAttribute(`data-iso-family`) === famKey);
+      });
+      const fam = ISO_FAMILIES[famKey] || ISO_FAMILIES.wash;
+      const card = document.getElementById(`iso-detail-card`);
+      if (!card) return;
+      card.innerHTML = `
+        <span class="tag tag-sky">ISO 3758:2023 Standard</span>
+        <h3 class="subhead" style="margin-top: var(--space-xs);">${fam.title}</h3>
+        <p style="color: var(--on-surface-variant);">${fam.desc}</p>
+        <div class="list-stack">
+          ${fam.items.map(function (it) {
+            return `<div class="reminder-item"><strong>${it.code}</strong><span style="color:var(--on-surface-variant); font-size:0.9rem;">${it.detail}</span></div>`;
+          }).join(``)}
+        </div>
+      `;
+    }
+
+    function renderStaticKnowledgeCards() {
+      const mGrid = document.getElementById(`mistakes-grid`);
+      if (mGrid) {
+        mGrid.innerHTML = LAUNDRY_MISTAKES.map(function (m) {
+          return `
+            <article class="panel-soft">
+              <span class="mono-figure tag">${m.num}</span>
+              <h4 class="subhead" style="margin-top: var(--space-xs);">${m.title}</h4>
+              <p style="margin: 6px 0 0; font-size: 0.88rem; color: var(--on-surface-variant);">${m.desc}</p>
+            </article>`;
+        }).join(``);
+      }
+
+      const uGrid = document.getElementById(`target-users-grid`);
+      if (uGrid) {
+        uGrid.innerHTML = TARGET_USERS.map(function (u) {
+          return `
+            <article class="panel">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="step-badge"><i data-lucide="${u.icon}" width="16" height="16" aria-hidden="true"></i></span>
+                <span class="tag">${u.badge}</span>
+              </div>
+              <h4 class="subhead" style="margin-top: var(--space-sm);">${u.role}</h4>
+              <p style="margin: 6px 0 var(--space-md); font-size: 0.9rem; color: var(--on-surface-variant);">${u.desc}</p>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyUserPreset('${u.preset.cat}','${u.preset.fabric}','${u.preset.color}')">
+                Load Sample Garment
+              </button>
+            </article>`;
+        }).join(``);
+      }
+    }
+
+    function applyUserPreset(cat, fabric, color) {
+      selectCategory(cat);
+      selectFabric(fabric);
+      selectColor(color);
+      scrollToSection(`analyzer`);
+    }
+
+    /* Contact Form */
+    function submitContactForm(e) {
+      e.preventDefault();
+      const nameEl = document.getElementById(`contact-name`);
+      const emailEl = document.getElementById(`contact-email`);
+      const subjEl = document.getElementById(`contact-subject`);
+      const msgEl = document.getElementById(`contact-message`);
+      const statusBox = document.getElementById(`contact-status`);
+      const statusText = document.getElementById(`contact-status-text`);
+
+      if (!nameEl || !emailEl || !subjEl || !msgEl) return;
+      if (msgEl.value.trim().length < 10) {
+        if (statusBox && statusText) {
+          statusBox.className = `inline-banner is-error`;
+          statusBox.style.display = `flex`;
+          statusText.textContent = `Please provide at least 10 characters describing your garment care query.`;
+        }
+        return;
+      }
+
+      if (statusBox && statusText) {
+        statusBox.className = `inline-banner is-sage`;
+        statusBox.style.display = `flex`;
+        statusText.textContent = `Thank you, ${nameEl.value.trim()}. Your enquiry "${subjEl.value.trim()}" has been logged for our Sri Lankan textile care team.`;
+      }
+      e.target.reset();
+    }
+
+    /* =========================================================================
+       6. CHARTS (CHART.JS)
+       ========================================================================= */
+    function initWeatherChart() {
+      const ctxEl = document.getElementById(`chart-sl-weather`);
+      if (!ctxEl || typeof Chart === `undefined`) return;
+      const navy = getThemeColor(`--data-1`, `#162b49`);
+      const sage = getThemeColor(`--data-2`, `#3f6147`);
+
+      weatherChartInstance = new Chart(ctxEl, {
+        type: `bar`,
+        data: {
+          labels: [`SW Monsoon (May–Sep)`, `Inter-Monsoon (Oct–Nov)`, `NE Monsoon (Dec–Feb)`, `Dry Season (Mar–Apr)`],
+          datasets: [
+            {
+              label: `Relative Humidity (%)`,
+              data: [86, 84, 78, 66],
+              backgroundColor: navy,
+              borderRadius: 4
+            },
+            {
+              label: `Indoor Drying Time (Hours)`,
+              data: [22, 19, 14, 7],
+              backgroundColor: sage,
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: `bottom` } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: `rgba(22,43,73,0.08)` } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function updateLifespanChart(activeFabric, baseMonths, smartMonths) {
+      const ctxEl = document.getElementById(`chart-lifespan-impact`);
+      if (!ctxEl || typeof Chart === `undefined`) return;
+      const navy = getThemeColor(`--data-1`, `#162b49`);
+      const ctxGray = getThemeColor(`--data-context`, `#c2cbc7`);
+
+      if (lifespanChartInstance) {
+        lifespanChartInstance.data.labels = [`Standard Machine Care (${activeFabric})`, `LankaWeave Smart Care (${activeFabric})`];
+        lifespanChartInstance.data.datasets[0].data = [baseMonths, smartMonths];
+        lifespanChartInstance.update();
+        return;
+      }
+
+      lifespanChartInstance = new Chart(ctxEl, {
+        type: `bar`,
+        data: {
+          labels: [`Standard Machine Care (${activeFabric})`, `LankaWeave Smart Care (${activeFabric})`],
+          datasets: [{
+            label: `Estimated Garment Lifespan (Months)`,
+            data: [baseMonths, smartMonths],
+            backgroundColor: [ctxGray, navy],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: `y`,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, max: 80, grid: { color: `rgba(22,43,73,0.08)` } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    /* =========================================================================
+       7. INITIALISATION & STARTUP
+       ========================================================================= */
+    async function initApp() {
+      try {
+        if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && typeof saved === `object`) {
+            appState = Object.assign({}, appState, saved);
+          }
+        }
+      } catch (err) {
+        /* Proceed with clean defaults */
+      }
+
+      // Restore UI controls from loaded state
+      const waterEl = document.getElementById(`water-hardness-select`);
+      const notesEl = document.getElementById(`garment-notes-input`);
+      const cityEl = document.getElementById(`sl-city-select`);
+      const detEl = document.getElementById(`pref-detergent-select`);
+      const dryEl = document.getElementById(`pref-drying-select`);
+      if (waterEl) waterEl.value = appState.waterHardness || `Moderate`;
+      if (notesEl) notesEl.value = appState.garmentNotes || ``;
+      if (cityEl) cityEl.value = appState.city || `colombo`;
+      if (detEl && appState.preferences) detEl.value = appState.preferences.detergent;
+      if (dryEl && appState.preferences) dryEl.value = appState.preferences.drying;
+
+      // Render high-res studio visuals
+      drawHeroWardrobeCanvas();
+      drawAllGarmentThumbnails();
+      drawAllMacroThumbnails();
+      drawCareEnvironmentCards();
+
+      // Render interactive sections
+      initWeatherChart();
+      selectCategory(appState.selectedCategory);
+      selectFabric(appState.selectedFabric);
+      selectColor(appState.selectedColor);
+      selectCityWeather(appState.city);
+      setWeatherScenario(appState.weatherScenario);
+      selectDamageType(appState.damageType);
+      renderReminders();
+      renderDashboard();
+      selectIsoFamily(`wash`);
+      renderStaticKnowledgeCards();
+
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
+        window.notebookAppApi.notifyAppReady();
+      }
+    }
+
+    document.addEventListener(`DOMContentLoaded`, initApp);
+  </script>
+</body>
+</html>
